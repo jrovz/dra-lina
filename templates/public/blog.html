@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="blog-hero">
+    <div class="container">
+        <h1>Centro de Bienestar Familiar</h1>
+        <p>Tu guía profesional para la salud y el bienestar de cada miembro de tu hogar.</p>
+    </div>
+</header>
+
+<div class="container blog-main">
+    {% if featured_post %}
+    <section class="featured-post">
+        <div class="featured-card">
+            <div class="featured-info">
+                <span class="badge">Más reciente</span>
+                <h2>{{ featured_post.title }}</h2>
+                <p>{{ featured_post.content[:200] }}...</p>
+                <div class="meta">
+                    <span>{{ featured_post.created_at.strftime('%d %b, %Y') }}</span>
+                    <span>&bull;</span>
+                    <span>5 min de lectura</span>
+                </div>
+                <a href="{{ url_for('post_detail', post_id=featured_post.id) }}" class="btn-primary">Leer artículo</a>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="categories-nav">
+        <ul>
+            <li><a href="#" class="active">Todos</a></li>
+            <li><a href="#">Infancia</a></li>
+            <li><a href="#">Adultos</a></li>
+            <li><a href="#">Bienestar</a></li>
+            <li><a href="#">Nutrición</a></li>
+        </ul>
+    </section>
+
+    <section class="recent-posts">
+        <div class="posts-grid">
+            {% for post in recent_posts %}
+            <article class="post-card">
+                <div class="post-image"></div>
+                <div class="post-details">
+                    <span class="post-cat">Salud Familiar</span>
+                    <h3>{{ post.title }}</h3>
+                    <div class="meta">
+                        <span>{{ post.created_at.strftime('%d %b, %Y') }}</span>
+                    </div>
+                    <a href="{{ url_for('post_detail', post_id=post.id) }}" class="link">Leer más &rarr;</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="newsletter-cta">
+        <div class="cta-content">
+            <h2>Cuidado para toda tu familia</h2>
+            <p>Suscríbete para recibir consejos directos de la Dra. Lina sobre medicina preventiva.</p>
+            <form class="cta-form">
+                <input type="email" placeholder="Tu correo electrónico" required>
+                <button type="submit">Unirme ahora</button>
+            </form>
+        </div>
+    </section>
+</div>
+
+<style>
+    .blog-hero {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        padding: 6rem 0;
+        text-align: center;
+    }
+
+    .blog-hero h1 {
+        font-size: 3.5rem;
+        margin-bottom: 1rem;
+        color: white;
+    }
+
+    .blog-hero p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+
+    .blog-main {
+        margin-top: -4rem;
+    }
+
+    .featured-card {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        display: flex;
+        overflow: hidden;
+        margin-bottom: 4rem;
+    }
+
+    .featured-info {
+        padding: 4rem;
+        flex: 1;
+    }
+
+    .badge {
+        background: var(--accent);
+        color: var(--primary);
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .featured-info h2 {
+        font-size: 2.5rem;
+        margin: 1.5rem 0;
+        color: var(--dark);
+    }
+
+    .featured-info p {
+        color: #666;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+
+    .meta {
+        display: flex;
+        gap: 1rem;
+        color: #999;
+        font-size: 0.9rem;
+        margin-bottom: 2rem;
+    }
+
+    .categories-nav {
+        margin-bottom: 3rem;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 1rem;
+    }
+
+    .categories-nav ul {
+        list-style: none;
+        display: flex;
+        gap: 2rem;
+        padding: 0;
+    }
+
+    .categories-nav a {
+        color: var(--dark);
+        opacity: 0.7;
+        font-weight: 600;
+        padding: 0.5rem 0;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .categories-nav a:hover {
+        color: var(--primary);
+        opacity: 1;
+    }
+
+    .categories-nav a.active {
+        color: var(--primary);
+        opacity: 1;
+        border-bottom: 2px solid var(--primary);
+    }
+
+    .posts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 2.5rem;
+        margin-bottom: 5rem;
+    }
+
+    .post-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        transition: transform 0.3s;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .post-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .post-image {
+        height: 200px;
+        background: #eee;
+    }
+
+    .post-details {
+        padding: 1.5rem;
+    }
+
+    .post-cat {
+        color: var(--secondary);
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .post-details h3 {
+        margin: 0.8rem 0;
+        font-size: 1.3rem;
+    }
+
+    .post-details .link {
+        color: var(--primary);
+        font-weight: 700;
+        text-decoration: none;
+    }
+
+    .newsletter-cta {
+        background: var(--dark);
+        color: white;
+        padding: 5rem;
+        border-radius: 30px;
+        text-align: center;
+        margin-bottom: 5rem;
+    }
+
+    .cta-content h2 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+        color: white;
+    }
+
+    .cta-form {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2.5rem;
+    }
+
+    .cta-form input {
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        border: none;
+        width: 300px;
+    }
+
+    .cta-form button {
+        background: var(--primary);
+        color: white;
+        border: none;
+        padding: 1rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+</style>
+{% endblock %}

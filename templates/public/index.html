@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dra. Lina - Especialista en Salud Familiar</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <nav>
+            <div class="logo">Dra. Lina</div>
+            <ul>
+                <li><a href="{{ url_for('index') }}">Inicio</a></li>
+                <li><a href="{{ url_for('blog') }}">Blog de Salud</a></li>
+                <li><a href="{{ url_for('reservar') }}" class="cta">Agendar Cita</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Cuidado Integral para toda la Familia</h1>
+            <p>Especialista en salud familiar y bienestar preventivo.</p>
+            <a href="{{ url_for('reservar') }}" class="btn-primary">Reservar Valoración</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Dra. Lina. Todos los derechos reservados.</p>
+    </footer>
+</body>
+
+</html>

@@ -1,0 +1,514 @@
+{% extends "base.html" %}
+
+{% block title %}AI Content Studio - Dra. Lina{% endblock %}
+
+{% block content %}
+<section class="ai-studio container">
+    <header class="studio-header">
+        <h1>🧠 AI Content Studio</h1>
+        <p class="subtitle">Crea contenido profesional con asistencia de inteligencia artificial</p>
+    </header>
+
+    <!-- Toolbar de IA -->
+    <div class="ai-toolbar">
+        <button type="button" id="btn-research" class="ai-btn">
+            <span class="icon">🔍</span>
+            <span class="label">Investigar Tema</span>
+        </button>
+        <button type="button" id="btn-draft" class="ai-btn">
+            <span class="icon">✍️</span>
+            <span class="label">Generar Borrador</span>
+        </button>
+        <button type="button" id="btn-image" class="ai-btn">
+            <span class="icon">🎨</span>
+            <span class="label">Crear Imagen</span>
+        </button>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <span id="loading-text">Procesando...</span>
+    </div>
+
+    <!-- Panel de Investigación -->
+    <div id="research-panel" class="panel hidden">
+        <div class="panel-header">
+            <h3>📊 Resultados de Investigación</h3>
+            <button type="button" class="close-btn"
+                onclick="this.parentElement.parentElement.classList.add('hidden')">×</button>
+        </div>
+        <div id="research-content" class="research-grid"></div>
+    </div>
+
+    <!-- Formulario Principal -->
+    <form action="{{ url_for('new_post') }}" method="POST" class="admin-form" id="post-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+            <label for="title">📝 Título del Artículo</label>
+            <input type="text" id="title" name="title" required
+                placeholder="Ej: Consejos para el primer trimestre del embarazo">
+        </div>
+
+        <div class="form-group">
+            <label for="content">📄 Contenido (HTML permitido)</label>
+            <textarea id="content" name="content" rows="20" required
+                placeholder="El contenido se generará aquí..."></textarea>
+        </div>
+
+        <!-- Preview de Imagen Generada -->
+        <div id="image-preview" class="image-preview-container hidden">
+            <label>🖼️ Imagen Destacada Generada</label>
+            <img id="generated-image" src="" alt="Imagen generada por IA">
+            <input type="hidden" name="featured_image_url" id="featured_image_url">
+            <button type="button" class="btn-remove" onclick="removeImage()">Quitar imagen</button>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-primary">
+                🚀 Publicar Artículo
+            </button>
+            <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</section>
+
+<script>
+    const csrfToken = '{{ csrf_token() }}';
+
+    function showLoading(text) {
+        document.getElementById('loading-text').textContent = text;
+        document.getElementById('loading').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+        document.getElementById('loading').classList.add('hidden');
+    }
+
+    function showError(message) {
+        alert('Error: ' + message);
+    }
+
+    // Investigar Tema
+    document.getElementById('btn-research').addEventListener('click', async () => {
+        const topic = document.getElementById('title').value;
+        if (!topic) {
+            alert('Por favor, ingresa un título primero');
+            document.getElementById('title').focus();
+            return;
+        }
+
+        showLoading('Investigando tema...');
+
+        try {
+            const res = await fetch('/admin/api/research', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ topic })
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            // Renderizar resultados
+            const research = data.research;
+            let html = '';
+
+            if (research.puntos_clave && research.puntos_clave.length) {
+                html += '<div class="research-section"><h4>💡 Puntos Clave</h4><ul>';
+                research.puntos_clave.forEach(p => html += `<li>${p}</li>`);
+                html += '</ul></div>';
+            }
+
+            if (research.preguntas_frecuentes && research.preguntas_frecuentes.length) {
+                html += '<div class="research-section"><h4>❓ Preguntas Frecuentes</h4><ul>';
+                research.preguntas_frecuentes.forEach(p => html += `<li>${p}</li>`);
+                html += '</ul></div>';
+            }
+
+            if (research.keywords_seo && research.keywords_seo.length) {
+                html += '<div class="research-section"><h4>🔑 Keywords SEO</h4><div class="tags">';
+                research.keywords_seo.forEach(k => html += `<span class="tag">${k}</span>`);
+                html += '</div></div>';
+            }
+
+            document.getElementById('research-content').innerHTML = html;
+            document.getElementById('research-panel').classList.remove('hidden');
+
+        } catch (err) {
+            showError('Error de conexión: ' + err.message);
+        } finally {
+            hideLoading();
+        }
+    });
+
+    // Generar Borrador
+    document.getElementById('btn-draft').addEventListener('click', async () => {
+        const topic = document.getElementById('title').value;
+        if (!topic) {
+            alert('Por favor, ingresa un título primero');
+            document.getElementById('title').focus();
+            return;
+        }
+
+        if (document.getElementById('content').value.trim()) {
+            if (!confirm('¿Deseas reemplazar el contenido actual?')) return;
+        }
+
+        showLoading('Generando borrador con IA... (esto puede tardar 30-60 segundos)');
+
+        try {
+            const res = await fetch('/admin/api/generate-draft', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ topic })
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            document.getElementById('content').value = data.content;
+
+        } catch (err) {
+            showError('Error de conexión: ' + err.message);
+        } finally {
+            hideLoading();
+        }
+    });
+
+    // Generar Imagen
+    document.getElementById('btn-image').addEventListener('click', async () => {
+        const title = document.getElementById('title').value;
+        if (!title) {
+            alert('Por favor, ingresa un título primero');
+            document.getElementById('title').focus();
+            return;
+        }
+
+        showLoading('Generando imagen con DALL-E 3... (esto puede tardar 30-60 segundos)');
+
+        try {
+            const res = await fetch('/admin/api/generate-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({ title })
+            });
+
+            const data = await res.json();
+
+            if (data.error) {
+                showError(data.error);
+                return;
+            }
+
+            document.getElementById('generated-image').src = data.image_url;
+            document.getElementById('featured_image_url').value = data.image_url;
+            document.getElementById('image-preview').classList.remove('hidden');
+
+        } catch (err) {
+            showError('Error de conexión: ' + err.message);
+        } finally {
+            hideLoading();
+        }
+    });
+
+    function removeImage() {
+        document.getElementById('generated-image').src = '';
+        document.getElementById('featured_image_url').value = '';
+        document.getElementById('image-preview').classList.add('hidden');
+    }
+</script>
+
+<style>
+    .ai-studio {
+        padding: 2rem;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .studio-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .studio-header h1 {
+        font-size: 2.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .subtitle {
+        color: #666;
+        margin-top: 0.5rem;
+    }
+
+    /* Toolbar */
+    .ai-toolbar {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .ai-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        min-width: 140px;
+    }
+
+    .ai-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .ai-btn .icon {
+        font-size: 1.5rem;
+    }
+
+    /* Loading */
+    .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: #f0f4ff;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid #667eea;
+        border-top-color: transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Panel de Investigación */
+    .panel {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .panel-header h3 {
+        margin: 0;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+    }
+
+    .research-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+
+    .research-section {
+        background: white;
+        padding: 1rem;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .research-section h4 {
+        margin: 0 0 0.75rem 0;
+        color: #333;
+    }
+
+    .research-section ul {
+        margin: 0;
+        padding-left: 1.25rem;
+    }
+
+    .research-section li {
+        margin-bottom: 0.5rem;
+        color: #555;
+    }
+
+    .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tag {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+    }
+
+    /* Formulario */
+    .admin-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        padding: 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-family: inherit;
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    /* Image Preview */
+    .image-preview-container {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 12px;
+        text-align: center;
+    }
+
+    .image-preview-container label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .image-preview-container img {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-remove {
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    /* Actions */
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+    }
+
+    .btn-primary {
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-secondary {
+        padding: 1rem 2rem;
+        background: #6c757d;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 1rem;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .ai-toolbar {
+            flex-direction: column;
+        }
+
+        .ai-btn {
+            width: 100%;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}

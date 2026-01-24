@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="admin-dashboard container">
+    <h1>Panel de Administración - Dra. Lina</h1>
+
+    <div class="admin-grid">
+        <div class="admin-card">
+            <h3>Gestión de Blog</h3>
+            <p>Escribe y publica nuevos artículos para captación de pacientes.</p>
+            <a href="{{ url_for('new_post') }}" class="btn-primary">Nuevo Artículo</a>
+        </div>
+
+        <div class="admin-card">
+            <h3>Agenda Médica</h3>
+            <p>Visualiza y administra tus citas programadas.</p>
+            <a href="#" class="btn-secondary">Ver Calendario</a>
+        </div>
+    </div>
+</section>
+
+<style>
+    .admin-dashboard {
+        padding: 4rem 2rem;
+    }
+
+    .admin-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .admin-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        text-align: center;
+    }
+
+    .btn-secondary {
+        background: var(--secondary);
+        color: white;
+        padding: 0.8rem 1.5rem;
+        border-radius: 50px;
+        text-decoration: none;
+        display: inline-block;
+        margin-top: 1rem;
+    }
+</style>
+{% endblock %}

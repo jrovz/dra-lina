@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block content %}
+<article class="post-detail">
+    <header class="post-detail-header">
+        <div class="container">
+            <a href="{{ url_for('blog') }}" class="back-link">&larr; Volver al Blog</a>
+            <span class="post-date text-white">{{ post.created_at.strftime('%d de %B, %Y') }}</span>
+            <h1>{{ post.title }}</h1>
+        </div>
+    </header>
+
+    <div class="post-body container">
+        <div class="post-main-content">
+            {{ post.content | safe }}
+        </div>
+
+        <!-- Espacio para AdSense -->
+        <div class="adsense-block">
+            <p class="ads-label">Publicidad</p>
+            <div class="ads-placeholder">
+                <!-- El script de AdSense se insertaría dinámicamente aquí -->
+                <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXX" data-ad-slot="XXXXX"
+                    data-ad-format="auto" data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+    </div>
+</article>
+
+<style>
+    .post-detail-header {
+        background: linear-gradient(135deg, var(--dark), var(--primary));
+        color: white;
+        padding: 5rem 0;
+        text-align: center;
+    }
+
+    .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+    }
+
+    .back-link {
+        display: block;
+        color: var(--accent);
+        margin-bottom: 2rem;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .post-date {
+        opacity: 0.8;
+        margin-bottom: 1rem;
+        display: block;
+    }
+
+    .post-detail-header h1 {
+        font-size: 3.5rem;
+        line-height: 1.2;
+    }
+
+    .post-body {
+        background: white;
+        margin-top: -3rem;
+        border-radius: 20px;
+        padding: 4rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        color: var(--dark);
+        font-size: 1.2rem;
+        line-height: 1.8;
+    }
+
+    .post-main-content {
+        margin-bottom: 4rem;
+    }
+
+    .adsense-block {
+        border-top: 1px solid #eee;
+        padding-top: 2rem;
+        text-align: center;
+    }
+
+    .ads-label {
+        font-size: 0.7rem;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
+    }
+
+    .ads-placeholder {
+        background: #f9f9f9;
+        min-height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px dashed #ddd;
+    }
+</style>
+{% endblock %}

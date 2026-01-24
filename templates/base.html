@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Dra. Lina{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <nav>
+        <div class="logo">Dra. Lina</div>
+        <ul>
+            <li><a href="{{ url_for('index') }}">Inicio</a></li>
+            <li><a href="{{ url_for('blog') }}">Blog</a></li>
+            {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('admin_dashboard') }}">Admin</a></li>
+            <li><a href="{{ url_for('logout') }}" class="cta">Salir</a></li>
+            {% else %}
+            <li><a href="{{ url_for('admin_login') }}">Ingresar</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+
+</html>
