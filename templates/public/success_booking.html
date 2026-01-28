@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="container" style="padding: 4rem 2rem; text-align: center; max-width: 600px;">
+    <div style="font-size: 5rem; margin-bottom: 1rem;">✅</div>
+    <h1 style="color: #2d3748; margin-bottom: 1rem;">¡Solicitud Recibida!</h1>
+    <p style="color: #4a5568; font-size: 1.1rem; line-height: 1.6;">
+        Hemos recibido tu solicitud de cita. Hemos enviado un mensaje de confirmación a <strong>{{ email }}</strong>.
+        Por favor, revisa tu bandeja de entrada (y spam) para confirmar tu cita.
+    </p>
+    <a href="{{ url_for('index') }}" class="btn-primary"
+        style="display: inline-block; margin-top: 2rem; text-decoration: none; padding: 1rem 2rem; border-radius: 25px; color: white;">Volver
+        al Inicio</a>
+</section>
+{% endblock %}

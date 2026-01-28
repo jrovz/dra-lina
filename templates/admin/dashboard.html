@@ -1,52 +1,461 @@
 {% extends "base.html" %}
 
+{% block title %}Panel de Administración - Dra. Lina{% endblock %}
+
 {% block content %}
 <section class="admin-dashboard container">
-    <h1>Panel de Administración - Dra. Lina</h1>
+    <div class="dashboard-header">
+        <h1>Panel de Administración</h1>
+        <button type="button" class="settings-btn" onclick="openSettings()">
+            ⚙️
+        </button>
+    </div>
 
     <div class="admin-grid">
         <div class="admin-card">
+            <div class="card-icon">📝</div>
             <h3>Gestión de Blog</h3>
-            <p>Escribe y publica nuevos artículos para captación de pacientes.</p>
+            <p>Escribe y publica nuevos artículos con asistencia de IA.</p>
             <a href="{{ url_for('new_post') }}" class="btn-primary">Nuevo Artículo</a>
         </div>
 
         <div class="admin-card">
+            <div class="card-icon">📅</div>
             <h3>Agenda Médica</h3>
             <p>Visualiza y administra tus citas programadas.</p>
             <a href="#" class="btn-secondary">Ver Calendario</a>
         </div>
+
+        <div class="admin-card">
+            <div class="card-icon">👨‍⚕️</div>
+            <h3>Médicos</h3>
+            <p>Gestiona perfiles y horarios del equipo médico.</p>
+            <a href="{{ url_for('admin_doctors') }}" class="btn-primary">Gestionar</a>
+        </div>
+
+        <div class="admin-card">
+            <div class="card-icon">🚪</div>
+            <h3>Cerrar Sesión</h3>
+            <p>Salir del panel de administración.</p>
+            <a href="{{ url_for('logout') }}" class="btn-logout">Salir</a>
+        </div>
     </div>
 </section>
 
+<!-- Settings Modal -->
+<div id="settings-modal" class="modal hidden">
+    <div class="modal-overlay" onclick="closeSettings()"></div>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>⚙️ Configuración de IA</h2>
+            <button type="button" class="close-btn" onclick="closeSettings()">×</button>
+        </div>
+
+        <form id="settings-form" class="settings-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-group">
+                <label for="gemini_key">
+                    <span class="provider-icon">🔷</span> Google Gemini API Key
+                </label>
+                <div class="key-input-group">
+                    <input type="password" id="gemini_key" name="gemini_key" placeholder="AIza..."
+                        value="{{ gemini_key_masked or '' }}">
+                    <button type="button" class="toggle-visibility"
+                        onclick="toggleVisibility('gemini_key')">👁️</button>
+                </div>
+                <small>Usado para investigación y generación de contenido</small>
+            </div>
+
+            <div class="form-group">
+                <label for="openai_key">
+                    <span class="provider-icon">🟢</span> OpenAI API Key
+                </label>
+                <div class="key-input-group">
+                    <input type="password" id="openai_key" name="openai_key" placeholder="sk-..."
+                        value="{{ openai_key_masked or '' }}">
+                    <button type="button" class="toggle-visibility"
+                        onclick="toggleVisibility('openai_key')">👁️</button>
+                </div>
+                <small>Usado para generación de imágenes (DALL-E 3)</small>
+            </div>
+
+            <div class="status-indicator" id="config-status">
+                <div class="status-item">
+                    <span class="status-dot {{ 'active' if gemini_configured else 'inactive' }}"></span>
+                    Gemini: {{ 'Configurado' if gemini_configured else 'No configurado' }}
+                </div>
+                <div class="status-item">
+                    <span class="status-dot {{ 'active' if openai_configured else 'inactive' }}"></span>
+                    OpenAI: {{ 'Configurado' if openai_configured else 'No configurado' }}
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-save">💾 Guardar Configuración</button>
+            </div>
+        </form>
+
+        <div id="save-result" class="save-result hidden"></div>
+    </div>
+</div>
+
+<script>
+    function openSettings() {
+        document.getElementById('settings-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeSettings() {
+        document.getElementById('settings-modal').classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function toggleVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    document.getElementById('settings-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const geminiKey = document.getElementById('gemini_key').value;
+        const openaiKey = document.getElementById('openai_key').value;
+        const csrfToken = document.querySelector('[name="csrf_token"]').value;
+
+        const resultDiv = document.getElementById('save-result');
+        resultDiv.innerHTML = '<span class="loading">Guardando...</span>';
+        resultDiv.classList.remove('hidden');
+
+        try {
+            const res = await fetch('/admin/api/settings', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    gemini_key: geminiKey,
+                    openai_key: openaiKey
+                })
+            });
+
+            // Check if response is OK before parsing JSON
+            if (!res.ok) {
+                const text = await res.text();
+                console.error('Server response:', text);
+                throw new Error(`Error del servidor (${res.status}). Por favor recarga la página.`);
+            }
+
+            const data = await res.json();
+
+            if (data.success) {
+                resultDiv.innerHTML = '<span class="success">✅ Configuración guardada correctamente</span>';
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                resultDiv.innerHTML = `<span class="error">❌ Error: ${data.error}</span>`;
+            }
+        } catch (err) {
+            resultDiv.innerHTML = `<span class="error">❌ Error: ${err.message}</span>`;
+        }
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeSettings();
+    });
+</script>
+
 <style>
     .admin-dashboard {
-        padding: 4rem 2rem;
+        padding: 3rem 2rem;
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-header h1 {
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .settings-btn {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        border: none;
+        background: #f0f0f0;
+        font-size: 1.3rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .settings-btn:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transform: rotate(90deg);
     }
 
     .admin-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 2rem;
-        margin-top: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
     }
 
     .admin-card {
         background: white;
         padding: 2rem;
         border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
         text-align: center;
+        transition: transform 0.2s;
+    }
+
+    .admin-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .card-icon {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .admin-card h3 {
+        margin: 0.5rem 0;
+    }
+
+    .admin-card p {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .btn-primary,
+    .btn-secondary,
+    .btn-logout {
+        padding: 0.7rem 1.5rem;
+        border-radius: 25px;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
     }
 
     .btn-secondary {
-        background: var(--secondary);
+        background: #6c757d;
         color: white;
-        padding: 0.8rem 1.5rem;
-        border-radius: 50px;
-        text-decoration: none;
-        display: inline-block;
+    }
+
+    .btn-logout {
+        background: #dc3545;
+        color: white;
+    }
+
+    .btn-primary:hover,
+    .btn-secondary:hover,
+    .btn-logout:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Modal Styles */
+    .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(3px);
+    }
+
+    .modal-content {
+        position: relative;
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .modal-header h2 {
+        margin: 0;
+        font-size: 1.3rem;
+    }
+
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #666;
+    }
+
+    .settings-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    .settings-form .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .settings-form label {
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .provider-icon {
+        font-size: 1.1rem;
+    }
+
+    .key-input-group {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .key-input-group input {
+        flex: 1;
+        padding: 0.7rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+
+    .key-input-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .toggle-visibility {
+        padding: 0.5rem 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+    }
+
+    .settings-form small {
+        color: #888;
+        font-size: 0.8rem;
+    }
+
+    .status-indicator {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    .status-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+
+    .status-dot.active {
+        background: #28a745;
+    }
+
+    .status-dot.inactive {
+        background: #dc3545;
+    }
+
+    .form-actions {
+        margin-top: 0.5rem;
+    }
+
+    .btn-save {
+        width: 100%;
+        padding: 0.8rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-save:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .save-result {
         margin-top: 1rem;
+        padding: 0.75rem;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .save-result .success {
+        color: #28a745;
+    }
+
+    .save-result .error {
+        color: #dc3545;
+    }
+
+    .save-result .loading {
+        color: #667eea;
+    }
+
+    .hidden {
+        display: none !important;
     }
 </style>
 {% endblock %}

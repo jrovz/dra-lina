@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="container" style="padding: 2rem; display: flex; flex-direction: column; align-items: center;">
+    <h1 style="margin-bottom: 2rem; text-align: center;">{{ 'Editar' if doctor else 'Nuevo' }} Médico</h1>
+
+    <form method="POST" class="card"
+        style="width: 100%; max-width: 600px; padding: 2.5rem; background: white; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); display: flex; flex-direction: column; gap: 1.25rem;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <h3 style="margin-top: 0; color: #4a5568; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">Información
+            Pública</h3>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #2d3748;">Nombre
+                Completo</label>
+            <input type="text" name="name" value="{{ profile.name if profile else '' }}" required
+                placeholder="Ej: Dr. Juan Pérez"
+                style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e0; border-radius: 8px; transition: border-color 0.2s;">
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #2d3748;">Especialidad</label>
+            <input type="text" name="specialty" value="{{ profile.specialty if profile else '' }}" required
+                placeholder="Ej: Ginecología"
+                style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e0; border-radius: 8px;">
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #2d3748;">Biografía</label>
+            <textarea name="bio" rows="4" placeholder="Breve descripción profesional..."
+                style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e0; border-radius: 8px; resize: vertical;">{{ profile.bio if profile else '' }}</textarea>
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #2d3748;">Color
+                Identificativo</label>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <input type="color" name="color" value="{{ profile.color if profile else '#3b82f6' }}"
+                    style="height: 50px; width: 60px; padding: 0; border: none; cursor: pointer; border-radius: 8px; overflow: hidden;">
+                <span style="color: #718096; font-size: 0.9rem;">Usado para identificar al médico en el
+                    calendario.</span>
+            </div>
+        </div>
+
+        <h3 style="margin-top: 1rem; color: #4a5568; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+            Credenciales de Acceso</h3>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #2d3748;">Usuario
+                (Login)</label>
+            <input type="text" name="username" value="{{ doctor.username if doctor else '' }}" required
+                placeholder="usuario_acceso"
+                style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e0; border-radius: 8px;">
+        </div>
+
+        <div>
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; color: #2d3748;">Contraseña {{
+                '(Dejar en blanco para mantener)' if doctor else '' }}</label>
+            <input type="password" name="password" {{ 'required' if not doctor else '' }} placeholder="••••••••"
+                style="width: 100%; padding: 0.8rem; border: 1px solid #cbd5e0; border-radius: 8px;">
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+            <button type="submit" class="btn-primary"
+                style="flex: 2; border: none; padding: 1rem; border-radius: 8px; cursor: pointer; color: white; font-weight: 600; font-size: 1rem; transition: transform 0.1s;">Guardar
+                Médico</button>
+            <a href="{{ url_for('admin_doctors') }}"
+                style="flex: 1; text-align: center; text-decoration: none; padding: 1rem; background: #cbd5e0; color: #4a5568; border-radius: 8px; font-weight: 600; transition: background 0.2s;">Cancelar</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

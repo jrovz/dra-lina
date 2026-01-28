@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="container" style="padding: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1>Gestión de Médicos</h1>
+        <a href="{{ url_for('admin_doctors_new') }}" class="btn-primary">Nuevo Médico</a>
+    </div>
+
+    <div class="card"
+        style="background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="text-align: left; border-bottom: 2px solid #eee;">
+                    <th style="padding: 1rem;">Usuario</th>
+                    <th style="padding: 1rem;">Especialidad</th>
+                    <th style="padding: 1rem;">Color</th>
+                    <th style="padding: 1rem;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in doctors %}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 1rem;">{{ doc.username }}</td>
+                    <td style="padding: 1rem;">{{ doc.doctor_profile.specialty if doc.doctor_profile else 'N/A' }}</td>
+                    <td style="padding: 1rem;">
+                        <span
+                            style="display: inline-block; width: 20px; height: 20px; background: {{ doc.doctor_profile.color if doc.doctor_profile else '#ccc' }}; border-radius: 50%;"></span>
+                    </td>
+                    <td style="padding: 1rem;">
+                        <a href="{{ url_for('admin_doctors_edit', id=doc.id) }}"
+                            style="margin-right: 10px; color: #667eea; text-decoration: none;">Editar</a>
+                        <a href="{{ url_for('admin_doctors_schedule', id=doc.id) }}"
+                            style="color: #28a745; text-decoration: none;">Horario</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="padding: 2rem; text-align: center; color: #888;">No hay médicos registrados.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div style="margin-top: 2rem;">
+        <a href="{{ url_for('admin_dashboard') }}" style="color: #666; text-decoration: none;">← Volver al Panel</a>
+    </div>
+</section>
+{% endblock %}

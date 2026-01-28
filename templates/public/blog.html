@@ -12,10 +12,13 @@
     {% if featured_post %}
     <section class="featured-post">
         <div class="featured-card">
+            {% if featured_post.featured_image_url %}
+            <div class="featured-image" style="background-image: url('{{ featured_post.featured_image_url }}');"></div>
+            {% endif %}
             <div class="featured-info">
                 <span class="badge">Más reciente</span>
                 <h2>{{ featured_post.title }}</h2>
-                <p>{{ featured_post.content[:200] }}...</p>
+                <p>{{ featured_post.content|striptags|truncate(200) }}</p>
                 <div class="meta">
                     <span>{{ featured_post.created_at.strftime('%d %b, %Y') }}</span>
                     <span>&bull;</span>
@@ -41,10 +44,13 @@
         <div class="posts-grid">
             {% for post in recent_posts %}
             <article class="post-card">
-                <div class="post-image"></div>
+                <div class="post-image"
+                    style="background-image: url('{{ post.featured_image_url or '/static/img/default-blog.jpg' }}');">
+                </div>
                 <div class="post-details">
                     <span class="post-cat">Salud Familiar</span>
                     <h3>{{ post.title }}</h3>
+                    <p class="post-excerpt">{{ post.content|striptags|truncate(120) }}</p>
                     <div class="meta">
                         <span>{{ post.created_at.strftime('%d %b, %Y') }}</span>
                     </div>

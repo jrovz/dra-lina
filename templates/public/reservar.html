@@ -1,69 +1,507 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="reservas-container">
-    <h1>Agendar Cita con la Dra. Lina</h1>
-    <p>Selecciona un servicio y un horario disponible para tu valoración.</p>
+<section class="booking-container">
+    <div class="booking-header">
+        <h1>Agendar Cita</h1>
+        <p>Selecciona profesional, servicio y horario para tu consulta.</p>
+    </div>
 
-    <form action="/reservar" method="POST" class="booking-form">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <!-- Feedback messages -->
+    {% with messages = get_flashed_messages(category_filter=['danger']) %}
+    {% if messages %}
+    <div class="alert alert-danger">{{ messages[0] }}</div>
+    {% endif %}
+    {% endwith %}
 
-        <div class="form-group">
-            <label for="name">Nombre Completo:</label>
-            <input type="text" id="name" name="name" required placeholder="Ej: Maria Perez">
-        </div>
-
-        <div class="form-group">
-            <label for="email">Correo Electrónico:</label>
-            <input type="email" id="email" name="email" required placeholder="maria@ejemplo.com">
-        </div>
-
-        <div class="form-group">
-            <label for="service_id">Servicio:</label>
-            <select name="service_id" id="service_id" required>
-                {% for service in services %}
-                <option value="{{ service.id }}">{{ service.name }} - ${{ service.price }}</option>
+    <div class="booking-grid">
+        <!-- SELECCIÓN DE PROFESIONAL -->
+        <div class="step-section">
+            <h2 class="step-title"><span class="step-number">1</span> Profesional</h2>
+            <div class="cards-grid" id="doctors-grid">
+                {% for doctor in doctors %}
+                <div class="selection-card doctor-card" onclick="selectDoctor('{{ doctor.id }}', this)">
+                    <div class="doc-avatar" style="background: {{ doctor.doctor_profile.color }};">
+                        {{ doctor.doctor_profile.name[0] }}
+                    </div>
+                    <div class="doc-info">
+                        <h3>{{ doctor.doctor_profile.name }}</h3>
+                        <span>{{ doctor.doctor_profile.specialty }}</span>
+                        <!-- <small>{{ doctor.doctor_profile.bio[:50] }}...</small> -->
+                    </div>
+                </div>
                 {% endfor %}
-            </select>
+            </div>
+            <input type="hidden" id="selected_doctor_id">
         </div>
 
-        <div class="form-group">
-            <label for="date">Fecha y Hora:</label>
-            <input type="datetime-local" id="date" name="date" required>
+        <!-- SELECCIÓN DE SERVICIO -->
+        <div class="step-section">
+            <h2 class="step-title"><span class="step-number">2</span> Servicio</h2>
+            <div class="cards-grid" id="services-grid">
+                {% for service in services %}
+                <div class="selection-card service-card"
+                    onclick="selectService('{{ service.id }}', '{{ service.duration_minutes }}', this)">
+                    <div class="service-icon">⚕️</div>
+                    <div class="service-info">
+                        <h3>{{ service.name }}</h3>
+                        <div class="service-meta">
+                            <span>⏱ {{ service.duration_minutes }} min</span>
+                            <span>💲 {{ service.price }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <input type="hidden" id="selected_service_id">
+            <input type="hidden" id="selected_duration">
         </div>
 
-        <button type="submit" class="btn-primary">Solicitar Cita</button>
-    </form>
+        <!-- SELECCIÓN DE FECHA -->
+        <div class="step-section" id="date-section" style="opacity: 0.5; pointer-events: none;">
+            <h2 class="step-title"><span class="step-number">3</span> Fecha</h2>
+            <div class="dates-scroller">
+                <!-- JS will populate this -->
+            </div>
+            <input type="hidden" id="selected_date">
+        </div>
+    </div>
+
+    <!-- HORARIOS DISPONIBLES (SLOTS) -->
+    <div id="slots-container" class="slots-container hidden">
+        <h3>Horarios Disponibles para el <span id="slot-date-display"></span></h3>
+        <div id="slots-grid" class="slots-grid">
+            <!-- JS populates slots -->
+        </div>
+        <div id="no-slots-msg" class="hidden">No hay horarios disponibles para esta fecha.</div>
+        <div id="loading-slots" class="hidden">Consultando disponibilidad...</div>
+    </div>
+
+    <!-- FORMULARIO DE DATOS -->
+    <div id="patient-form-container" class="patient-form-container hidden">
+        <h3>Confirmar Reserva: <span id="confirm-time-display"></span></h3>
+
+        <form action="{{ url_for('reservar') }}" method="POST" class="final-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="doctor_id" id="form_doctor_id">
+            <input type="hidden" name="service_id" id="form_service_id">
+            <input type="hidden" name="date" id="form_date">
+            <input type="hidden" name="time" id="form_time">
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre Completo</label>
+                    <input type="text" name="name" required placeholder="Tu nombre">
+                </div>
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" name="email" required placeholder="tucorreo@ejemplo.com">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-confirm">Confirmar Cita</button>
+        </form>
+    </div>
+
 </section>
 
-<style>
-    .reservas-container {
-        max-width: 600px;
-        margin: 4rem auto;
-        padding: 2rem;
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+<script>
+    // State
+    let selectedDoctor = null;
+    let selectedService = null;
+    let selectedDate = null;
+    let selectedTime = null;
+
+    // Dates initialization (Next 14 days)
+    function initDates() {
+        const container = document.querySelector('.dates-scroller');
+        const today = new Date();
+        const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+        const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+        for (let i = 0; i < 14; i++) {
+            const d = new Date(today);
+            d.setDate(today.getDate() + i);
+
+            const dateStr = d.toISOString().split('T')[0];
+            const dayName = days[d.getDay()];
+            const dayNum = d.getDate();
+            const monthName = months[d.getMonth()];
+
+            const el = document.createElement('div');
+            el.className = 'date-card';
+            el.onclick = () => selectDate(dateStr, el);
+            el.innerHTML = `
+                <span class="day-name">${dayName}</span>
+                <span class="day-num">${dayNum}</span>
+                <span class="month-name">${monthName}</span>
+            `;
+            container.appendChild(el);
+        }
+    }
+    initDates();
+
+    function selectDoctor(id, el) {
+        selectedDoctor = id;
+        document.getElementById('selected_doctor_id').value = id;
+
+        // Visual updates
+        document.querySelectorAll('.doctor-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+
+        checkStep3();
     }
 
-    .booking-form {
+    function selectService(id, duration, el) {
+        selectedService = id;
+        document.getElementById('selected_service_id').value = id;
+
+        // Visual updates
+        document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+
+        checkStep3();
+    }
+
+    function checkStep3() {
+        const section = document.getElementById('date-section');
+        if (selectedDoctor && selectedService) {
+            section.style.opacity = '1';
+            section.style.pointerEvents = 'auto';
+            if (selectedDate) fetchSlots(); // Re-fetch if already selected date but changed doc/service
+        }
+    }
+
+    function selectDate(dateStr, el) {
+        selectedDate = dateStr;
+        document.getElementById('selected_date').value = dateStr;
+
+        document.querySelectorAll('.date-card').forEach(c => c.classList.remove('selected'));
+        el.classList.add('selected');
+
+        // Scroll to slots
+        document.getElementById('slots-container').classList.remove('hidden');
+        document.getElementById('patient-form-container').classList.add('hidden'); // Hide form if changing date
+        document.getElementById('slot-date-display').innerText = dateStr;
+
+        fetchSlots();
+    }
+
+    async function fetchSlots() {
+        if (!selectedDoctor || !selectedService || !selectedDate) return;
+
+        const grid = document.getElementById('slots-grid');
+        const loader = document.getElementById('loading-slots');
+        const noMsg = document.getElementById('no-slots-msg');
+
+        grid.innerHTML = '';
+        loader.classList.remove('hidden');
+        noMsg.classList.add('hidden');
+
+        try {
+            const csrf = document.querySelector('[name=csrf_token]').value;
+            const res = await fetch('/api/slots', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrf
+                },
+                body: JSON.stringify({
+                    doctor_id: selectedDoctor,
+                    service_id: selectedService,
+                    date: selectedDate
+                })
+            });
+
+            const data = await res.json();
+            loader.classList.add('hidden');
+
+            if (data.slots && data.slots.length > 0) {
+                data.slots.forEach(time => {
+                    const btn = document.createElement('button');
+                    btn.className = 'slot-btn';
+                    btn.innerText = time;
+                    btn.onclick = () => selectTime(time, btn);
+                    grid.appendChild(btn);
+                });
+            } else {
+                noMsg.classList.remove('hidden');
+            }
+
+        } catch (e) {
+            console.error(e);
+            loader.innerText = 'Error al cargar horarios.';
+        }
+    }
+
+    function selectTime(time, el) {
+        selectedTime = time;
+
+        document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+
+        const formContainer = document.getElementById('patient-form-container');
+        formContainer.classList.remove('hidden');
+        document.getElementById('confirm-time-display').innerText = `${selectedDate} a las ${time}`;
+
+        // Populate hidden form fields
+        document.getElementById('form_doctor_id').value = selectedDoctor;
+        document.getElementById('form_service_id').value = selectedService;
+        document.getElementById('form_date').value = selectedDate;
+        document.getElementById('form_time').value = time;
+
+        formContainer.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+
+<style>
+    .booking-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .booking-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .step-title {
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #2d3748;
+    }
+
+    .step-number {
+        background: #2d3748;
+        color: white;
+        width: 25px;
+        height: 25px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Cards Styles */
+    .selection-card {
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .selection-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .selection-card.selected {
+        border-color: #667eea;
+        background-color: #ebf4ff;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+    }
+
+    .doc-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: white;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+    }
+
+    .service-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .service-meta {
+        display: flex;
+        justify-content: center;
+        gap: 0.8rem;
+        font-size: 0.85rem;
+        color: #718096;
+        margin-top: 0.5rem;
+    }
+
+    /* Date Scroller */
+    .dates-scroller {
+        display: flex;
+        gap: 1rem;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+        scrollbar-width: thin;
+    }
+
+    .date-card {
+        min-width: 80px;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1rem 0.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .date-card:hover {
+        border-color: #cbd5e0;
+    }
+
+    .date-card.selected {
+        background: #2d3748;
+        color: white;
+        border-color: #2d3748;
+    }
+
+    .day-num {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .day-name {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+    }
+
+    /* Slots */
+    .slots-container {
+        margin-top: 2rem;
+        background: white;
+        padding: 2rem;
+        border-radius: 15px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .slots-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.8rem;
+        margin-top: 1rem;
+    }
+
+    .slot-btn {
+        padding: 0.8rem;
+        border: 1px solid #e2e8f0;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-weight: 500;
+        color: #2d3748;
+    }
+
+    .slot-btn:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .slot-btn.selected {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    /* Form */
+    .patient-form-container {
+        margin-top: 2rem;
+        background: #f7fafc;
+        padding: 2rem;
+        border-radius: 15px;
+        border: 1px solid #edf2f7;
+        animation: slideUp 0.3s ease-out;
+    }
+
+    .final-form {
+        margin-top: 1.5rem;
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
     }
 
+    .form-row {
+        display: flex;
+        gap: 1.5rem;
+    }
+
     .form-group {
+        flex: 1;
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
     }
 
-    input,
-    select {
+    .form-group input {
         padding: 0.8rem;
-        border: 1px solid #ddd;
-        border-radius: 10px;
-        font-family: inherit;
+        border: 1px solid #cbd5e0;
+        border-radius: 8px;
+    }
+
+    .btn-confirm {
+        padding: 1rem;
+        background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1rem;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .btn-confirm:hover {
+        transform: translateY(-2px);
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
     }
 </style>
 {% endblock %}

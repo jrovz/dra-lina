@@ -3,79 +3,551 @@
 {% block title %}AI Content Studio - Dra. Lina{% endblock %}
 
 {% block content %}
-<section class="ai-studio container">
-    <header class="studio-header">
-        <h1>🧠 AI Content Studio</h1>
-        <p class="subtitle">Crea contenido profesional con asistencia de inteligencia artificial</p>
-    </header>
+<div class="studio-layout">
+    <!-- Main Editor -->
+    <section class="ai-studio">
+        <header class="studio-header">
+            <h1>🧠 AI Content Studio</h1>
+            <p class="subtitle">Editor visual por bloques con asistencia de IA</p>
+        </header>
 
-    <!-- Toolbar de IA -->
-    <div class="ai-toolbar">
-        <button type="button" id="btn-research" class="ai-btn">
-            <span class="icon">🔍</span>
-            <span class="label">Investigar Tema</span>
-        </button>
-        <button type="button" id="btn-draft" class="ai-btn">
-            <span class="icon">✍️</span>
-            <span class="label">Generar Borrador</span>
-        </button>
-        <button type="button" id="btn-image" class="ai-btn">
-            <span class="icon">🎨</span>
-            <span class="label">Crear Imagen</span>
-        </button>
-    </div>
-
-    <!-- Loading Indicator -->
-    <div id="loading" class="loading hidden">
-        <div class="spinner"></div>
-        <span id="loading-text">Procesando...</span>
-    </div>
-
-    <!-- Panel de Investigación -->
-    <div id="research-panel" class="panel hidden">
-        <div class="panel-header">
-            <h3>📊 Resultados de Investigación</h3>
-            <button type="button" class="close-btn"
-                onclick="this.parentElement.parentElement.classList.add('hidden')">×</button>
-        </div>
-        <div id="research-content" class="research-grid"></div>
-    </div>
-
-    <!-- Formulario Principal -->
-    <form action="{{ url_for('new_post') }}" method="POST" class="admin-form" id="post-form">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-        <div class="form-group">
-            <label for="title">📝 Título del Artículo</label>
-            <input type="text" id="title" name="title" required
-                placeholder="Ej: Consejos para el primer trimestre del embarazo">
+        <!-- Loading Indicator -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <span id="loading-text">Procesando...</span>
         </div>
 
-        <div class="form-group">
-            <label for="content">📄 Contenido (HTML permitido)</label>
-            <textarea id="content" name="content" rows="20" required
-                placeholder="El contenido se generará aquí..."></textarea>
+        <!-- Research Panel -->
+        <div id="research-panel" class="panel hidden">
+            <div class="panel-header">
+                <h3>📊 Investigación</h3>
+                <button type="button" class="close-btn" onclick="closeResearchPanel()">×</button>
+            </div>
+            <div id="research-content" class="research-grid"></div>
         </div>
 
-        <!-- Preview de Imagen Generada -->
-        <div id="image-preview" class="image-preview-container hidden">
-            <label>🖼️ Imagen Destacada Generada</label>
-            <img id="generated-image" src="" alt="Imagen generada por IA">
+        <!-- Chat-style Prompt Section -->
+        <div class="chat-prompt-container">
+            <!-- Uploaded Files Preview -->
+            <div class="uploaded-files-bar" id="uploaded-files"></div>
+
+            <!-- Main Chat Input Area -->
+            <div class="chat-input-wrapper">
+                <!-- File Upload Button -->
+                <button type="button" class="chat-attach-btn" id="attach-btn" title="Adjuntar archivos">
+                    <span>+</span>
+                </button>
+                <input type="file" id="reference-files" name="reference_files" multiple hidden
+                    accept=".pdf,.doc,.docx,.txt,.md,.jpg,.jpeg,.png,.webp">
+
+                <!-- Prompt Textarea -->
+                <div class="chat-input-area">
+                    <textarea id="ai-prompt" name="ai_prompt" rows="1"
+                        placeholder="Describe el artículo que deseas generar..."></textarea>
+                </div>
+            </div>
+
+            <!-- Action Buttons Row -->
+            <div class="chat-actions-row">
+                <div class="action-buttons">
+                    <button type="button" id="btn-research" class="chat-action-btn" title="Investigar tema">
+                        <span class="icon">🔍</span>
+                        <span class="label">Investigar</span>
+                    </button>
+                    <button type="button" id="btn-draft" class="chat-action-btn primary" title="Generar borrador">
+                        <span class="icon">✍️</span>
+                        <span class="label">Generar Borrador</span>
+                    </button>
+                    <button type="button" id="btn-image" class="chat-action-btn" title="Crear imagen">
+                        <span class="icon">🎨</span>
+                        <span class="label">Imagen</span>
+                    </button>
+                    <button type="button" id="btn-seo" class="chat-action-btn seo" title="Analizar SEO">
+                        <span class="icon">📊</span>
+                        <span class="label">SEO</span>
+                    </button>
+                </div>
+
+                <!-- Model Selector -->
+                <div class="model-selector-inline">
+                    <select id="ai-model" title="Seleccionar modelo de IA">
+                        <optgroup label="Google Gemini">
+                            <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash</option>
+                            <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                        </optgroup>
+                        <optgroup label="OpenAI">
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Form -->
+        <form action="{{ url_for('new_post') }}" method="POST" class="admin-form" id="post-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="content" id="content-hidden">
             <input type="hidden" name="featured_image_url" id="featured_image_url">
-            <button type="button" class="btn-remove" onclick="removeImage()">Quitar imagen</button>
-        </div>
+            <input type="hidden" name="title" id="title" value="">
 
-        <div class="form-actions">
-            <button type="submit" class="btn-primary">
-                🚀 Publicar Artículo
-            </button>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">Cancelar</a>
+            <!-- Block Editor -->
+            <div class="block-editor">
+                <label>📄 Contenido (Click + para añadir bloques)</label>
+
+                <div id="blocks-container"></div>
+
+                <!-- Add Block Button -->
+                <div class="add-block-section">
+                    <button type="button" class="add-block-btn" id="add-block-trigger">
+                        <span>+</span> Añadir Bloque
+                    </button>
+                    <div class="block-type-menu hidden" id="block-type-menu">
+                        <button type="button" data-type="paragraph" class="block-type-option">📝 Párrafo</button>
+                        <button type="button" data-type="heading" class="block-type-option">📌 Título (H2)</button>
+                        <button type="button" data-type="subheading" class="block-type-option">📎 Subtítulo
+                            (H3)</button>
+                        <button type="button" data-type="image" class="block-type-option">🖼️ Imagen</button>
+                        <button type="button" data-type="list" class="block-type-option">📋 Lista</button>
+                        <button type="button" data-type="quote" class="block-type-option">💬 Cita</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Featured Image Preview -->
+            <div id="image-preview" class="image-preview-container hidden">
+                <label>🖼️ Imagen Destacada</label>
+                <img id="generated-image" src="" alt="Imagen generada">
+                <button type="button" class="btn-remove" onclick="removeImage()">Quitar</button>
+            </div>
+
+            <!-- Actions -->
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">🚀 Publicar</button>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </section>
+
+    <!-- SEO Sidebar -->
+    <aside id="seo-panel" class="seo-panel hidden">
+        <div class="seo-header">
+            <h3>📊 SEO Score</h3>
+            <button type="button" class="close-btn" onclick="closeSeoPanel()">×</button>
         </div>
-    </form>
-</section>
+        <div class="seo-score-circle">
+            <svg viewBox="0 0 36 36" class="circular-chart">
+                <path class="circle-bg"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path id="seo-circle" class="circle" stroke-dasharray="0, 100"
+                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <text x="18" y="20.35" class="score-text" id="seo-score-text">--</text>
+            </svg>
+        </div>
+        <div class="seo-stats">
+            <div class="stat"><span id="word-count">0</span> palabras</div>
+        </div>
+        <div class="seo-issues" id="seo-issues">
+            <p class="no-issues">Haz click en "Analizar SEO" para comenzar</p>
+        </div>
+        <div class="seo-keywords" id="seo-keywords"></div>
+    </aside>
+</div>
+
+<!-- AI Action Menu (floating) -->
+<div id="ai-action-menu" class="ai-action-menu hidden">
+    <button type="button" onclick="aiAction('expand')">✨ Expandir</button>
+    <button type="button" onclick="aiAction('shorten')">📝 Resumir</button>
+    <div class="menu-divider"></div>
+    <button type="button" onclick="aiAction('formal')">🎩 Tono Formal</button>
+    <button type="button" onclick="aiAction('casual')">💬 Tono Casual</button>
+    <button type="button" onclick="aiAction('scientific')">🔬 Científico</button>
+</div>
 
 <script>
     const csrfToken = '{{ csrf_token() }}';
+    let blockIdCounter = 0;
+    let currentBlockId = null;
+    let seoKeywords = [];
+
+    // Get selected AI model
+    function getSelectedModel() {
+        return document.getElementById('ai-model').value;
+    }
+
+    // Check if model is OpenAI
+    function isOpenAIModel(model) {
+        return model.startsWith('gpt-');
+    }
+
+    // ============ BLOCK MANAGEMENT ============
+
+    function createBlock(type, content = '') {
+        const blockId = `block-${blockIdCounter++}`;
+        const block = document.createElement('div');
+        block.className = 'content-block';
+        block.dataset.type = type;
+        block.dataset.id = blockId;
+        block.draggable = true;
+
+        const hasAiMenu = ['paragraph', 'list', 'quote'].includes(type);
+
+        let blockContent = '';
+
+        switch (type) {
+            case 'paragraph':
+                blockContent = `
+                <div class="block-handle" title="Arrastra para reordenar">⋮⋮</div>
+                <div class="block-content">
+                    <textarea placeholder="Escribe tu párrafo aquí..." rows="3">${content}</textarea>
+                </div>
+                <div class="block-actions">
+                    ${hasAiMenu ? `<button type="button" class="block-action-btn ai-menu-btn" onclick="showAiMenu('${blockId}', event)">✨</button>` : ''}
+                    <button type="button" class="block-action-btn delete-btn" onclick="deleteBlock('${blockId}')">🗑️</button>
+                </div>
+            `;
+                break;
+            case 'heading':
+                blockContent = `
+                <div class="block-handle" title="Arrastra para reordenar">⋮⋮</div>
+                <div class="block-content">
+                    <input type="text" class="heading-input" placeholder="Título de sección (H2)" value="${content}">
+                </div>
+                <div class="block-actions">
+                    <button type="button" class="block-action-btn delete-btn" onclick="deleteBlock('${blockId}')">🗑️</button>
+                </div>
+            `;
+                break;
+            case 'subheading':
+                blockContent = `
+                <div class="block-handle" title="Arrastra para reordenar">⋮⋮</div>
+                <div class="block-content">
+                    <input type="text" class="subheading-input" placeholder="Subtítulo (H3)" value="${content}">
+                </div>
+                <div class="block-actions">
+                    <button type="button" class="block-action-btn delete-btn" onclick="deleteBlock('${blockId}')">🗑️</button>
+                </div>
+            `;
+                break;
+            case 'image':
+                blockContent = `
+                <div class="block-handle" title="Arrastra para reordenar">⋮⋮</div>
+                <div class="block-content image-block-content">
+                    <div class="image-upload-area" onclick="this.querySelector('input').click()">
+                        <input type="file" accept="image/*" onchange="handleImageUpload(this, '${blockId}')" hidden>
+                        <div class="upload-placeholder" id="placeholder-${blockId}">
+                            <span>🖼️</span>
+                            <p>Click para subir imagen</p>
+                        </div>
+                        <img class="preview-img hidden" id="img-${blockId}" src="">
+                    </div>
+                    <input type="text" class="image-url-input" placeholder="O pega URL de imagen aquí..." 
+                           onchange="handleImageUrl(this.value, '${blockId}')" value="${content}">
+                    <input type="text" class="image-caption-input" placeholder="Descripción (alt text)">
+                    <button type="button" class="btn-ai-image" onclick="generateInlineImage('${blockId}')">🎨 Generar con IA</button>
+                </div>
+                <div class="block-actions">
+                    <button type="button" class="block-action-btn delete-btn" onclick="deleteBlock('${blockId}')">🗑️</button>
+                </div>
+            `;
+                break;
+            case 'list':
+                blockContent = `
+                <div class="block-handle" title="Arrastra para reordenar">⋮⋮</div>
+                <div class="block-content">
+                    <textarea class="list-input" placeholder="Escribe cada item en una línea:&#10;- Item 1&#10;- Item 2" rows="4">${content}</textarea>
+                </div>
+                <div class="block-actions">
+                    ${hasAiMenu ? `<button type="button" class="block-action-btn ai-menu-btn" onclick="showAiMenu('${blockId}', event)">✨</button>` : ''}
+                    <button type="button" class="block-action-btn delete-btn" onclick="deleteBlock('${blockId}')">🗑️</button>
+                </div>
+            `;
+                break;
+            case 'quote':
+                blockContent = `
+                <div class="block-handle" title="Arrastra para reordenar">⋮⋮</div>
+                <div class="block-content">
+                    <textarea class="quote-input" placeholder="Escribe una cita destacada..." rows="2">${content}</textarea>
+                </div>
+                <div class="block-actions">
+                    ${hasAiMenu ? `<button type="button" class="block-action-btn ai-menu-btn" onclick="showAiMenu('${blockId}', event)">✨</button>` : ''}
+                    <button type="button" class="block-action-btn delete-btn" onclick="deleteBlock('${blockId}')">🗑️</button>
+                </div>
+            `;
+                break;
+        }
+
+        block.innerHTML = blockContent;
+
+        // Add drag events
+        block.addEventListener('dragstart', handleDragStart);
+        block.addEventListener('dragend', handleDragEnd);
+        block.addEventListener('dragover', handleDragOver);
+        block.addEventListener('drop', handleDrop);
+
+        return block;
+    }
+
+    function addBlock(type) {
+        const container = document.getElementById('blocks-container');
+        const block = createBlock(type);
+        container.appendChild(block);
+
+        const input = block.querySelector('textarea, input[type="text"]');
+        if (input) input.focus();
+
+        document.getElementById('block-type-menu').classList.add('hidden');
+    }
+
+    function deleteBlock(blockId) {
+        const block = document.querySelector(`[data-id="${blockId}"]`);
+        if (block && confirm('¿Eliminar este bloque?')) {
+            block.remove();
+        }
+    }
+
+    // ============ AI ACTION MENU ============
+
+    function showAiMenu(blockId, event) {
+        event.stopPropagation();
+        currentBlockId = blockId;
+        const menu = document.getElementById('ai-action-menu');
+        const btn = event.target;
+        const rect = btn.getBoundingClientRect();
+
+        menu.style.top = `${rect.bottom + 5}px`;
+        menu.style.left = `${rect.left}px`;
+        menu.classList.remove('hidden');
+    }
+
+    function hideAiMenu() {
+        document.getElementById('ai-action-menu').classList.add('hidden');
+        currentBlockId = null;
+    }
+
+    async function aiAction(action) {
+        if (!currentBlockId) return;
+
+        const block = document.querySelector(`[data-id="${currentBlockId}"]`);
+        const textarea = block.querySelector('textarea');
+        if (!textarea || !textarea.value.trim()) {
+            alert('El bloque está vacío');
+            hideAiMenu();
+            return;
+        }
+
+        hideAiMenu();
+        showLoading(`Procesando: ${action}...`);
+
+        try {
+            const res = await fetch('/admin/api/ai-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({
+                    content: textarea.value,
+                    action: action,
+                    context: document.getElementById('title').value
+                })
+            });
+
+            const data = await res.json();
+            if (data.error) { alert(data.error); return; }
+
+            textarea.value = data.refined_content;
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+
+        } catch (err) {
+            alert('Error: ' + err.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.ai-action-menu') && !e.target.closest('.ai-menu-btn')) {
+            hideAiMenu();
+        }
+    });
+
+    // ============ DRAG & DROP ============
+
+    let draggedBlock = null;
+
+    function handleDragStart(e) {
+        draggedBlock = this;
+        this.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd(e) {
+        this.classList.remove('dragging');
+        document.querySelectorAll('.content-block').forEach(b => b.classList.remove('drag-over'));
+    }
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        this.classList.add('drag-over');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        if (draggedBlock !== this) {
+            const container = document.getElementById('blocks-container');
+            const blocks = [...container.children];
+            const draggedIndex = blocks.indexOf(draggedBlock);
+            const targetIndex = blocks.indexOf(this);
+
+            if (draggedIndex < targetIndex) {
+                this.parentNode.insertBefore(draggedBlock, this.nextSibling);
+            } else {
+                this.parentNode.insertBefore(draggedBlock, this);
+            }
+        }
+        this.classList.remove('drag-over');
+    }
+
+    // ============ IMAGE HANDLING ============
+
+    function handleImageUpload(input, blockId) {
+        const file = input.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = document.getElementById(`img-${blockId}`);
+                const placeholder = document.getElementById(`placeholder-${blockId}`);
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+
+                const urlInput = img.closest('.block-content').querySelector('.image-url-input');
+                urlInput.value = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function handleImageUrl(url, blockId) {
+        if (url) {
+            const img = document.getElementById(`img-${blockId}`);
+            const placeholder = document.getElementById(`placeholder-${blockId}`);
+            img.src = url;
+            img.classList.remove('hidden');
+            placeholder.classList.add('hidden');
+        }
+    }
+
+    async function generateInlineImage(blockId) {
+        const block = document.querySelector(`[data-id="${blockId}"]`);
+        const captionInput = block.querySelector('.image-caption-input');
+        const title = document.getElementById('title').value || 'Imagen médica';
+        const caption = captionInput.value || title;
+
+        showLoading('Generando imagen con DALL-E 3...');
+
+        try {
+            const res = await fetch('/admin/api/generate-image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ title: caption })
+            });
+
+            const data = await res.json();
+            if (data.error) { alert(data.error); return; }
+
+            handleImageUrl(data.image_url, blockId);
+
+        } catch (err) {
+            alert('Error: ' + err.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // ============ SERIALIZATION ============
+
+    function serializeBlocksToHTML() {
+        const blocks = document.querySelectorAll('.content-block');
+        let html = '';
+
+        blocks.forEach(block => {
+            const type = block.dataset.type;
+
+            switch (type) {
+                case 'paragraph':
+                    const pText = block.querySelector('textarea').value.trim();
+                    if (pText) html += `<p>${pText.replace(/\n/g, '<br>')}</p>\n`;
+                    break;
+                case 'heading':
+                    const h2Text = block.querySelector('input').value.trim();
+                    if (h2Text) html += `<h2>${h2Text}</h2>\n`;
+                    break;
+                case 'subheading':
+                    const h3Text = block.querySelector('input').value.trim();
+                    if (h3Text) html += `<h3>${h3Text}</h3>\n`;
+                    break;
+                case 'image':
+                    const imgUrl = block.querySelector('.image-url-input').value.trim();
+                    const imgAlt = block.querySelector('.image-caption-input').value.trim() || 'Imagen';
+                    if (imgUrl) html += `<figure><img src="${imgUrl}" alt="${imgAlt}"><figcaption>${imgAlt}</figcaption></figure>\n`;
+                    break;
+                case 'list':
+                    const listText = block.querySelector('textarea').value.trim();
+                    if (listText) {
+                        const items = listText.split('\n').filter(item => item.trim());
+                        html += '<ul>\n';
+                        items.forEach(item => {
+                            const cleanItem = item.replace(/^[-•*]\s*/, '').trim();
+                            if (cleanItem) html += `  <li>${cleanItem}</li>\n`;
+                        });
+                        html += '</ul>\n';
+                    }
+                    break;
+                case 'quote':
+                    const quoteText = block.querySelector('textarea').value.trim();
+                    if (quoteText) html += `<blockquote>${quoteText}</blockquote>\n`;
+                    break;
+            }
+        });
+
+        return html;
+    }
+
+    // ============ FORM SUBMISSION ============
+
+    document.getElementById('post-form').addEventListener('submit', function (e) {
+        const html = serializeBlocksToHTML();
+        if (!html.trim()) {
+            e.preventDefault();
+            alert('Por favor, añade al menos un bloque de contenido.');
+            return;
+        }
+        document.getElementById('content-hidden').value = html;
+    });
+
+    // ============ BLOCK TYPE MENU ============
+
+    document.getElementById('add-block-trigger').addEventListener('click', function () {
+        document.getElementById('block-type-menu').classList.toggle('hidden');
+    });
+
+    document.querySelectorAll('.block-type-option').forEach(btn => {
+        btn.addEventListener('click', function () {
+            addBlock(this.dataset.type);
+        });
+    });
+
+    document.addEventListener('click', function (e) {
+        const menu = document.getElementById('block-type-menu');
+        const trigger = document.getElementById('add-block-trigger');
+        if (!menu.contains(e.target) && e.target !== trigger && !trigger.contains(e.target)) {
+            menu.classList.add('hidden');
+        }
+    });
+
+    // ============ AI FEATURES ============
 
     function showLoading(text) {
         document.getElementById('loading-text').textContent = text;
@@ -86,15 +558,83 @@
         document.getElementById('loading').classList.add('hidden');
     }
 
-    function showError(message) {
-        alert('Error: ' + message);
+    // AI Action Menu
+    function showAiMenu(blockId, event) {
+        event.stopPropagation();
+        currentBlockId = blockId;
+        const menu = document.getElementById('ai-action-menu');
+        const btn = event.target.closest('.block-action-btn');
+        const rect = btn.getBoundingClientRect();
+
+        menu.style.top = rect.bottom + 5 + 'px';
+        menu.style.left = rect.left + 'px';
+        menu.classList.remove('hidden');
     }
 
-    // Investigar Tema
+    async function aiAction(action) {
+        const menu = document.getElementById('ai-action-menu');
+        menu.classList.add('hidden');
+
+        if (!currentBlockId) {
+            alert('No hay bloque seleccionado');
+            return;
+        }
+
+        const block = document.querySelector(`[data-id="${currentBlockId}"]`);
+        if (!block) return;
+
+        const textarea = block.querySelector('textarea');
+        if (!textarea) return;
+
+        const content = textarea.value.trim();
+        if (!content) {
+            alert('El bloque está vacío');
+            return;
+        }
+
+        const model = getSelectedModel();
+        const context = document.getElementById('title').value || '';
+
+        showLoading('Procesando con IA...');
+
+        try {
+            const res = await fetch('/admin/api/ai-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ content, action, context, model })
+            });
+
+            const data = await res.json();
+            if (data.error) {
+                alert('Error: ' + data.error);
+                return;
+            }
+
+            textarea.value = data.refined_content;
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+
+        } catch (err) {
+            alert('Error: ' + err.message);
+        } finally {
+            hideLoading();
+        }
+    }
+
+    // Close AI menu when clicking outside
+    document.addEventListener('click', function (e) {
+        const menu = document.getElementById('ai-action-menu');
+        if (!menu.contains(e.target) && !e.target.closest('.ai-menu-btn')) {
+            menu.classList.add('hidden');
+        }
+    });
+
+
+    // Research
     document.getElementById('btn-research').addEventListener('click', async () => {
         const topic = document.getElementById('title').value;
         if (!topic) {
-            alert('Por favor, ingresa un título primero');
+            alert('Ingresa un título primero');
             document.getElementById('title').focus();
             return;
         }
@@ -102,39 +642,37 @@
         showLoading('Investigando tema...');
 
         try {
+            const model = getSelectedModel();
             const res = await fetch('/admin/api/research', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({ topic })
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ topic, model })
             });
 
             const data = await res.json();
+            if (data.error) { alert(data.error); return; }
 
-            if (data.error) {
-                showError(data.error);
-                return;
-            }
-
-            // Renderizar resultados
             const research = data.research;
+            seoKeywords = research.keywords_seo || [];
             let html = '';
 
-            if (research.puntos_clave && research.puntos_clave.length) {
+            if (research.puntos_clave?.length) {
                 html += '<div class="research-section"><h4>💡 Puntos Clave</h4><ul>';
-                research.puntos_clave.forEach(p => html += `<li>${p}</li>`);
+                research.puntos_clave.forEach((p, i) => {
+                    html += `<li>${p} <button type="button" class="insert-btn" onclick="insertResearchPoint('${escapeHtml(p)}', 'heading')">+H2</button> <button type="button" class="insert-btn" onclick="insertResearchPoint('${escapeHtml(p)}', 'paragraph')">+P</button></li>`;
+                });
                 html += '</ul></div>';
             }
 
-            if (research.preguntas_frecuentes && research.preguntas_frecuentes.length) {
+            if (research.preguntas_frecuentes?.length) {
                 html += '<div class="research-section"><h4>❓ Preguntas Frecuentes</h4><ul>';
-                research.preguntas_frecuentes.forEach(p => html += `<li>${p}</li>`);
+                research.preguntas_frecuentes.forEach(p => {
+                    html += `<li>${p} <button type="button" class="insert-btn" onclick="insertResearchPoint('${escapeHtml(p)}', 'subheading')">+H3</button></li>`;
+                });
                 html += '</ul></div>';
             }
 
-            if (research.keywords_seo && research.keywords_seo.length) {
+            if (research.keywords_seo?.length) {
                 html += '<div class="research-section"><h4>🔑 Keywords SEO</h4><div class="tags">';
                 research.keywords_seo.forEach(k => html += `<span class="tag">${k}</span>`);
                 html += '</div></div>';
@@ -144,87 +682,143 @@
             document.getElementById('research-panel').classList.remove('hidden');
 
         } catch (err) {
-            showError('Error de conexión: ' + err.message);
+            alert('Error: ' + err.message);
         } finally {
             hideLoading();
         }
     });
 
-    // Generar Borrador
+    function escapeHtml(text) {
+        return text.replace(/'/g, "\\'").replace(/"/g, '\\"');
+    }
+
+    function insertResearchPoint(text, type) {
+        const container = document.getElementById('blocks-container');
+        const block = createBlock(type, text);
+        container.appendChild(block);
+    }
+
+    function closeResearchPanel() {
+        document.getElementById('research-panel').classList.add('hidden');
+    }
+
+    // Generate Draft
     document.getElementById('btn-draft').addEventListener('click', async () => {
-        const topic = document.getElementById('title').value;
+        let topic = document.getElementById('title').value;
+        const promptInput = document.getElementById('ai-prompt');
+
+        // Si no hay título, intentar usar el prompt del chat
+        if (!topic && promptInput && promptInput.value.trim()) {
+            topic = promptInput.value.trim();
+        }
+
         if (!topic) {
-            alert('Por favor, ingresa un título primero');
-            document.getElementById('title').focus();
+            alert('Ingresa un título o un prompt en el chat primero');
             return;
         }
 
-        if (document.getElementById('content').value.trim()) {
-            if (!confirm('¿Deseas reemplazar el contenido actual?')) return;
+        const container = document.getElementById('blocks-container');
+        if (container.children.length > 0) {
+            if (!confirm('Esto reemplazará los bloques actuales. ¿Continuar?')) return;
+            container.innerHTML = '';
         }
 
-        showLoading('Generando borrador con IA... (esto puede tardar 30-60 segundos)');
+        showLoading('Generando borrador con IA...');
 
         try {
+            const model = getSelectedModel();
             const res = await fetch('/admin/api/generate-draft', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({ topic })
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ topic, model })
             });
 
             const data = await res.json();
+            if (data.error) { alert(data.error); return; }
 
-            if (data.error) {
-                showError(data.error);
-                return;
-            }
-
-            document.getElementById('content').value = data.content;
+            parseHTMLToBlocks(data.content);
 
         } catch (err) {
-            showError('Error de conexión: ' + err.message);
+            alert('Error: ' + err.message);
         } finally {
             hideLoading();
         }
     });
 
-    // Generar Imagen
+    function parseHTMLToBlocks(html) {
+        const container = document.getElementById('blocks-container');
+        const temp = document.createElement('div');
+        temp.innerHTML = html;
+
+        temp.childNodes.forEach(node => {
+            if (node.nodeType !== 1) return;
+            const tagName = node.tagName.toLowerCase();
+
+            switch (tagName) {
+                case 'h2':
+                    container.appendChild(createBlock('heading', node.textContent));
+                    break;
+                case 'h3':
+                    container.appendChild(createBlock('subheading', node.textContent));
+                    break;
+                case 'p':
+                    container.appendChild(createBlock('paragraph', node.textContent));
+                    break;
+                case 'ul':
+                case 'ol':
+                    const items = [...node.querySelectorAll('li')].map(li => '- ' + li.textContent).join('\n');
+                    container.appendChild(createBlock('list', items));
+                    break;
+                case 'blockquote':
+                    container.appendChild(createBlock('quote', node.textContent));
+                    break;
+            }
+        });
+    }
+
+    // Generate Featured Image
     document.getElementById('btn-image').addEventListener('click', async () => {
-        const title = document.getElementById('title').value;
+        let title = document.getElementById('title').value;
+        const promptInput = document.getElementById('ai-prompt');
+
+        // Si no hay título, intentar usar el prompt del chat
+        if (!title && promptInput && promptInput.value.trim()) {
+            title = promptInput.value.trim();
+        }
+
         if (!title) {
-            alert('Por favor, ingresa un título primero');
-            document.getElementById('title').focus();
+            alert('Ingresa un título o un prompt en el chat primero');
             return;
         }
 
-        showLoading('Generando imagen con DALL-E 3... (esto puede tardar 30-60 segundos)');
+        showLoading('Generando imagen...');
 
         try {
+            const model = getSelectedModel();
             const res = await fetch('/admin/api/generate-image', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({ title })
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ title, model })
             });
 
             const data = await res.json();
+            if (data.error) { alert(data.error); return; }
 
-            if (data.error) {
-                showError(data.error);
-                return;
-            }
+            // Add as a movable block
+            const container = document.getElementById('blocks-container');
+            const block = createBlock('image', data.image_url);
+            container.appendChild(block);
 
-            document.getElementById('generated-image').src = data.image_url;
-            document.getElementById('featured_image_url').value = data.image_url;
-            document.getElementById('image-preview').classList.remove('hidden');
+            // Trigger preview for the new block
+            handleImageUrl(data.image_url, block.dataset.id);
+
+            // Also keep as featured for metadata
+            // document.getElementById('generated-image').src = data.image_url;
+            // document.getElementById('featured_image_url').value = data.image_url;
+            // document.getElementById('image-preview').classList.remove('hidden');
 
         } catch (err) {
-            showError('Error de conexión: ' + err.message);
+            alert('Error: ' + err.message);
         } finally {
             hideLoading();
         }
@@ -235,22 +829,215 @@
         document.getElementById('featured_image_url').value = '';
         document.getElementById('image-preview').classList.add('hidden');
     }
+
+    // ============ SEO PANEL ============
+
+    document.getElementById('btn-seo').addEventListener('click', async () => {
+        const title = document.getElementById('title').value;
+        const content = serializeBlocksToHTML();
+
+        if (!title || !content) {
+            alert('Necesitas un título y contenido para analizar el SEO');
+            return;
+        }
+
+        document.getElementById('seo-panel').classList.remove('hidden');
+        showLoading('Analizando SEO...');
+
+        try {
+            const res = await fetch('/admin/api/seo-analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+                body: JSON.stringify({ title, content, keywords: seoKeywords })
+            });
+
+            const data = await res.json();
+            updateSeoPanel(data);
+
+        } catch (err) {
+            alert('Error: ' + err.message);
+        } finally {
+            hideLoading();
+        }
+    });
+
+    function updateSeoPanel(data) {
+        // Update score circle
+        const circle = document.getElementById('seo-circle');
+        const scoreText = document.getElementById('seo-score-text');
+        circle.setAttribute('stroke-dasharray', `${data.score}, 100`);
+        circle.style.stroke = data.score >= 70 ? '#28a745' : data.score >= 40 ? '#ffc107' : '#dc3545';
+        scoreText.textContent = data.score;
+
+        // Update word count
+        document.getElementById('word-count').textContent = data.word_count;
+
+        // Update issues
+        const issuesContainer = document.getElementById('seo-issues');
+        if (data.issues.length > 0) {
+            issuesContainer.innerHTML = data.issues.map(issue => `<div class="issue">${issue}</div>`).join('');
+        } else {
+            issuesContainer.innerHTML = '<div class="issue success">✅ ¡Excelente! No hay problemas detectados.</div>';
+        }
+
+        // Update keywords
+        const keywordsContainer = document.getElementById('seo-keywords');
+        if (data.keyword_presence && Object.keys(data.keyword_presence).length > 0) {
+            let kwHtml = '<h4>Keywords</h4>';
+            for (const [kw, count] of Object.entries(data.keyword_presence)) {
+                const status = count >= 2 ? 'good' : count >= 1 ? 'warning' : 'bad';
+                kwHtml += `<div class="keyword-item ${status}">${kw}: ${count}x</div>`;
+            }
+            keywordsContainer.innerHTML = kwHtml;
+        }
+    }
+
+    function closeSeoPanel() {
+        document.getElementById('seo-panel').classList.add('hidden');
+    }
+
+    // ============ FILE UPLOAD HANDLING ============
+
+    let uploadedFiles = [];
+
+    function handleFiles(files) {
+        const maxSize = 10 * 1024 * 1024; // 10MB
+
+        for (const file of files) {
+            if (file.size > maxSize) {
+                alert(`El archivo "${file.name}" excede el límite de 10MB`);
+                continue;
+            }
+
+            if (!uploadedFiles.some(f => f.name === file.name && f.size === file.size)) {
+                uploadedFiles.push(file);
+            }
+        }
+
+        renderUploadedFiles();
+    }
+
+    function getFileIcon(fileName) {
+        const ext = fileName.split('.').pop().toLowerCase();
+        const icons = {
+            'pdf': '📄',
+            'doc': '📝', 'docx': '📝',
+            'txt': '📃', 'md': '📃',
+            'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'webp': '🖼️', 'gif': '🖼️'
+        };
+        return icons[ext] || '📎';
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function renderUploadedFiles() {
+        const container = document.getElementById('uploaded-files');
+        container.innerHTML = uploadedFiles.map((file, index) => `
+            <div class="uploaded-file" data-index="${index}">
+                <span class="file-icon">${getFileIcon(file.name)}</span>
+                <span class="file-name" title="${file.name}">${file.name}</span>
+                <span class="file-size">${formatFileSize(file.size)}</span>
+                <button type="button" class="remove-file" onclick="removeUploadedFile(${index})">×</button>
+            </div>
+        `).join('');
+    }
+
+    function removeUploadedFile(index) {
+        uploadedFiles.splice(index, 1);
+        renderUploadedFiles();
+    }
+
+    function getPromptData() {
+        return {
+            prompt: document.getElementById('ai-prompt').value,
+            files: uploadedFiles
+        };
+    }
+
+    // Initialize components
+    function initChatInterface() {
+        const attachBtn = document.getElementById('attach-btn');
+        const fileInput = document.getElementById('reference-files');
+        const promptTextarea = document.getElementById('ai-prompt');
+        const chatContainer = document.querySelector('.chat-prompt-container');
+
+        // Attach button click
+        attachBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+            fileInput.value = ''; // Reset to allow re-upload same file
+        });
+
+        // Drag and drop on the entire chat container
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            chatContainer.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            chatContainer.addEventListener(eventName, () => {
+                chatContainer.classList.add('drag-over');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            chatContainer.addEventListener(eventName, () => {
+                chatContainer.classList.remove('drag-over');
+            });
+        });
+
+        chatContainer.addEventListener('drop', (e) => {
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // Auto-resize textarea
+        promptTextarea.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initChatInterface);
+
+    // Initialize with empty paragraph
+    addBlock('paragraph');
 </script>
 
 <style>
-    .ai-studio {
-        padding: 2rem;
-        max-width: 1000px;
+    /* ============ LAYOUT ============ */
+    .studio-layout {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        max-width: 1400px;
         margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .ai-studio {
+        flex: 0 1 900px;
+        width: 100%;
+        max-width: 900px;
     }
 
     .studio-header {
         text-align: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
     }
 
     .studio-header h1 {
-        font-size: 2.5rem;
+        font-size: 1.8rem;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -259,59 +1046,310 @@
 
     .subtitle {
         color: #666;
-        margin-top: 0.5rem;
+        margin-top: 0.25rem;
+        font-size: 0.9rem;
     }
 
-    /* Toolbar */
+    /* ============ CHAT-STYLE PROMPT ============ */
+    .chat-prompt-container {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.08) 100%);
+        border: 2px solid rgba(102, 126, 234, 0.25);
+        border-radius: 16px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .chat-prompt-container.drag-over {
+        border-color: #667eea;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .uploaded-files-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .uploaded-files-bar:empty {
+        display: none;
+    }
+
+    .uploaded-file {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 20px;
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+        animation: slideIn 0.2s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .uploaded-file .file-icon {
+        font-size: 0.9rem;
+    }
+
+    .uploaded-file .file-name {
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #333;
+    }
+
+    .uploaded-file .file-size {
+        color: #888;
+        font-size: 0.65rem;
+    }
+
+    .uploaded-file .remove-file {
+        background: none;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        padding: 0;
+        font-size: 1rem;
+        line-height: 1;
+        transition: color 0.2s;
+    }
+
+    .uploaded-file .remove-file:hover {
+        color: #dc3545;
+    }
+
+    /* Chat Input Wrapper */
+    .chat-input-wrapper {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.75rem;
+        background: white;
+        border: 2px solid #e0e0e0;
+        border-radius: 24px;
+        padding: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .chat-input-wrapper:focus-within {
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15);
+    }
+
+    .chat-attach-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #667eea;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        color: #667eea;
+        font-size: 1.5rem;
+        font-weight: 300;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+    }
+
+    .chat-attach-btn:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        transform: rotate(90deg);
+    }
+
+    .chat-input-area {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .chat-input-area textarea {
+        width: 100%;
+        border: none;
+        outline: none;
+        resize: none;
+        font-family: inherit;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        padding: 0.5rem;
+        max-height: 150px;
+        min-height: 40px;
+        background: transparent;
+    }
+
+    .chat-input-area textarea::placeholder {
+        color: #999;
+    }
+
+    /* Chat Actions Row */
+    .chat-actions-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(102, 126, 234, 0.15);
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.4rem;
+        flex-wrap: wrap;
+    }
+
+    .chat-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.45rem 0.8rem;
+        border: 1px solid #e0e0e0;
+        background: white;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: #555;
+        transition: all 0.2s ease;
+    }
+
+    .chat-action-btn:hover {
+        background: #f5f5f5;
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .chat-action-btn.primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+    }
+
+    .chat-action-btn.primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    .chat-action-btn.seo {
+        border-color: #28a745;
+        color: #28a745;
+    }
+
+    .chat-action-btn.seo:hover {
+        background: #28a745;
+        color: white;
+    }
+
+    .chat-action-btn .icon {
+        font-size: 0.9rem;
+    }
+
+    .chat-action-btn .label {
+        font-weight: 500;
+    }
+
+    /* Model Selector Inline */
+    .model-selector-inline {
+        flex-shrink: 0;
+    }
+
+    .model-selector-inline select {
+        padding: 0.4rem 0.7rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 20px;
+        background: white;
+        font-size: 0.75rem;
+        cursor: pointer;
+        color: #555;
+        min-width: 140px;
+        transition: all 0.2s;
+    }
+
+    .model-selector-inline select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+
+    .model-selector-inline select:hover {
+        border-color: #667eea;
+    }
+
+    /* Hide old styles - keep for compatibility */
+    .model-selector {
+        display: none;
+    }
+
+    .ai-toolbar {
+        display: none;
+    }
+
+    .ai-btn {
+        display: none;
+    }
+
     .ai-toolbar {
         display: flex;
-        gap: 1rem;
+        gap: 0.5rem;
         justify-content: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         flex-wrap: wrap;
     }
 
     .ai-btn {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        gap: 0.5rem;
-        padding: 1rem 1.5rem;
+        gap: 0.4rem;
+        padding: 0.5rem 0.8rem;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         border: none;
-        border-radius: 12px;
+        border-radius: 6px;
         cursor: pointer;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-        min-width: 140px;
+        font-size: 0.8rem;
+        transition: all 0.2s;
     }
 
     .ai-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
 
-    .ai-btn .icon {
-        font-size: 1.5rem;
+    .seo-btn {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
     }
 
-    /* Loading */
+    /* ============ LOADING ============ */
     .loading {
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 1rem;
-        padding: 1.5rem;
+        gap: 0.5rem;
+        padding: 0.75rem;
         background: #f0f4ff;
-        border-radius: 10px;
-        margin-bottom: 1.5rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        font-size: 0.85rem;
     }
 
     .spinner {
-        width: 24px;
-        height: 24px;
-        border: 3px solid #667eea;
+        width: 18px;
+        height: 18px;
+        border: 2px solid #667eea;
         border-top-color: transparent;
         border-radius: 50%;
         animation: spin 1s linear infinite;
@@ -323,77 +1361,92 @@
         }
     }
 
-    /* Panel de Investigación */
+    /* ============ PANELS ============ */
     .panel {
         background: #f8f9fa;
         border: 1px solid #e9ecef;
-        border-radius: 12px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
     }
 
     .panel-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 1rem;
+        margin-bottom: 0.75rem;
     }
 
     .panel-header h3 {
         margin: 0;
+        font-size: 0.95rem;
     }
 
     .close-btn {
         background: none;
         border: none;
-        font-size: 1.5rem;
+        font-size: 1.2rem;
         cursor: pointer;
         color: #666;
     }
 
     .research-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 0.6rem;
     }
 
     .research-section {
         background: white;
-        padding: 1rem;
-        border-radius: 8px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        padding: 0.6rem;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
     .research-section h4 {
-        margin: 0 0 0.75rem 0;
-        color: #333;
+        margin: 0 0 0.4rem 0;
+        font-size: 0.85rem;
     }
 
     .research-section ul {
         margin: 0;
-        padding-left: 1.25rem;
+        padding-left: 1rem;
+        font-size: 0.8rem;
     }
 
     .research-section li {
-        margin-bottom: 0.5rem;
-        color: #555;
+        margin-bottom: 0.3rem;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        flex-wrap: wrap;
+    }
+
+    .insert-btn {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 0.1rem 0.3rem;
+        border-radius: 3px;
+        font-size: 0.65rem;
+        cursor: pointer;
     }
 
     .tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.5rem;
+        gap: 0.25rem;
     }
 
     .tag {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-        font-size: 0.85rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 10px;
+        font-size: 0.7rem;
     }
 
-    /* Formulario */
+    /* ============ FORM ============ */
     .admin-form {
         display: flex;
         flex-direction: column;
@@ -403,111 +1456,729 @@
     .form-group {
         display: flex;
         flex-direction: column;
-        gap: 0.5rem;
+        gap: 0.3rem;
     }
 
     .form-group label {
         font-weight: 600;
         color: #333;
+        font-size: 0.85rem;
     }
 
-    .form-group input,
-    .form-group textarea {
-        padding: 1rem;
+    .form-group input[type="text"] {
+        padding: 0.6rem;
         border: 2px solid #e9ecef;
-        border-radius: 10px;
-        font-family: inherit;
-        font-size: 1rem;
-        transition: border-color 0.3s;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        transition: border-color 0.2s;
     }
 
-    .form-group input:focus,
-    .form-group textarea:focus {
+    .form-group input:focus {
         outline: none;
         border-color: #667eea;
     }
 
-    /* Image Preview */
+    /* ============ PROMPT SECTION ============ */
+    .prompt-section {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+        border: 2px solid rgba(102, 126, 234, 0.2);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .prompt-header {
+        text-align: center;
+        margin-bottom: 1.25rem;
+    }
+
+    .prompt-header h2 {
+        font-size: 1.3rem;
+        margin: 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .prompt-subtitle {
+        color: #666;
+        font-size: 0.85rem;
+        margin: 0.25rem 0 0 0;
+    }
+
+    .prompt-section textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 0.95rem;
+        resize: vertical;
+        line-height: 1.5;
+        transition: border-color 0.2s;
+        min-height: 100px;
+    }
+
+    .prompt-section textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .label-hint {
+        font-weight: 400;
+        color: #888;
+        font-size: 0.8rem;
+    }
+
+    /* File Upload Zone */
+    .file-upload-zone {
+        border: 2px dashed #667eea;
+        border-radius: 10px;
+        padding: 1.5rem;
+        text-align: center;
+        background: rgba(102, 126, 234, 0.03);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .file-upload-zone:hover,
+    .file-upload-zone.drag-over {
+        background: rgba(102, 126, 234, 0.08);
+        border-color: #764ba2;
+        transform: scale(1.01);
+    }
+
+    .file-upload-zone.drag-over {
+        border-style: solid;
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .upload-content {
+        pointer-events: none;
+    }
+
+    .file-upload-zone .upload-content {
+        pointer-events: auto;
+    }
+
+    .upload-icon {
+        font-size: 2.5rem;
+        display: block;
+        margin-bottom: 0.5rem;
+    }
+
+    .upload-text {
+        color: #555;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .upload-text strong {
+        color: #667eea;
+    }
+
+    .upload-hint {
+        color: #888;
+        font-size: 0.75rem;
+        margin: 0.5rem 0 0 0;
+    }
+
+    /* Uploaded Files */
+    .uploaded-files {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+    }
+
+    .uploaded-file {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.8rem;
+        animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .uploaded-file .file-icon {
+        font-size: 1.1rem;
+    }
+
+    .uploaded-file .file-name {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #333;
+    }
+
+    .uploaded-file .file-size {
+        color: #888;
+        font-size: 0.7rem;
+    }
+
+    .uploaded-file .remove-file {
+        background: none;
+        border: none;
+        color: #dc3545;
+        cursor: pointer;
+        padding: 0.1rem 0.3rem;
+        font-size: 1rem;
+        line-height: 1;
+        opacity: 0.6;
+        transition: opacity 0.2s;
+    }
+
+    .uploaded-file .remove-file:hover {
+        opacity: 1;
+    }
+
+    /* ============ BLOCK EDITOR ============ */
+    .block-editor {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .block-editor>label {
+        font-weight: 600;
+        color: #333;
+        font-size: 0.85rem;
+    }
+
+    #blocks-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        min-height: 120px;
+        padding: 0.5rem;
+        background: #fafbfc;
+        border-radius: 8px;
+    }
+
+    .content-block {
+        display: flex;
+        align-items: stretch;
+        gap: 0.75rem;
+        background: white;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1rem;
+        transition: all 0.2s;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
+
+    .content-block:hover {
+        border-color: #667eea;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    }
+
+    .content-block.dragging {
+        opacity: 0.5;
+        border: 2px dashed #667eea;
+    }
+
+    .content-block.drag-over {
+        border-color: #764ba2;
+        background: #f0f4ff;
+    }
+
+    .block-handle {
+        cursor: grab;
+        color: #bbb;
+        padding: 0.5rem 0.25rem;
+        user-select: none;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        border-right: 1px solid #eee;
+        margin-right: 0.5rem;
+    }
+
+    .block-handle:hover {
+        color: #667eea;
+    }
+
+    .block-handle:active {
+        cursor: grabbing;
+    }
+
+    .block-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .block-content textarea,
+    .block-content input[type="text"] {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 1rem;
+        resize: vertical;
+        line-height: 1.5;
+        transition: border-color 0.2s;
+    }
+
+    .block-content textarea:focus,
+    .block-content input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .heading-input {
+        font-size: 1.25rem !important;
+        font-weight: 700;
+        color: #333;
+    }
+
+    .subheading-input {
+        font-size: 1.1rem !important;
+        font-weight: 600;
+        color: #444;
+    }
+
+    .quote-input {
+        font-style: italic;
+        border-left: 4px solid #667eea !important;
+        padding-left: 1rem !important;
+        background: linear-gradient(90deg, rgba(102, 126, 234, 0.05) 0%, transparent 100%);
+    }
+
+    .block-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding-left: 0.75rem;
+        border-left: 1px solid #eee;
+        margin-left: 0.5rem;
+    }
+
+    .block-action-btn {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        opacity: 0.7;
+        transition: all 0.2s;
+    }
+
+    .block-action-btn:hover {
+        opacity: 1;
+        background: #667eea;
+        border-color: #667eea;
+        color: white;
+        transform: scale(1.05);
+    }
+
+    .ai-menu-btn {
+        color: #667eea;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        border-color: rgba(102, 126, 234, 0.3);
+    }
+
+    .ai-menu-btn:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .delete-btn:hover {
+        background: #dc3545;
+        border-color: #dc3545;
+    }
+
+    /* Image Block */
+    .image-block-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .image-upload-area {
+        border: 2px dashed #ddd;
+        border-radius: 6px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .image-upload-area:hover {
+        border-color: #667eea;
+        background: #f8f9ff;
+    }
+
+    .upload-placeholder {
+        color: #888;
+        font-size: 0.85rem;
+    }
+
+    .upload-placeholder span {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+
+    .preview-img {
+        max-width: 100%;
+        max-height: 150px;
+        border-radius: 4px;
+    }
+
+    .btn-ai-image {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 0.4rem 0.8rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        cursor: pointer;
+    }
+
+    /* ============ AI ACTION MENU ============ */
+    .ai-action-menu {
+        position: fixed;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        padding: 0.4rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .ai-action-menu button {
+        background: none;
+        border: none;
+        padding: 0.5rem 0.8rem;
+        text-align: left;
+        cursor: pointer;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        transition: background 0.2s;
+    }
+
+    .ai-action-menu button:hover {
+        background: #f0f4ff;
+    }
+
+    .menu-divider {
+        height: 1px;
+        background: #e9ecef;
+        margin: 0.2rem 0;
+    }
+
+    /* ============ ADD BLOCK ============ */
+    .add-block-section {
+        position: relative;
+        margin-top: 0.4rem;
+    }
+
+    .add-block-btn {
+        width: 100%;
+        padding: 0.6rem;
+        border: 2px dashed #ccc;
+        border-radius: 6px;
+        background: transparent;
+        color: #666;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .add-block-btn:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .add-block-btn span {
+        font-weight: bold;
+        font-size: 1rem;
+    }
+
+    .block-type-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        z-index: 100;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.2rem;
+        padding: 0.4rem;
+        margin-top: 0.2rem;
+    }
+
+    .block-type-option {
+        padding: 0.5rem;
+        border: none;
+        background: #f8f9fa;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.75rem;
+        transition: all 0.2s;
+    }
+
+    .block-type-option:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    /* ============ SEO PANEL ============ */
+    .seo-panel {
+        width: 220px;
+        background: white;
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        padding: 1rem;
+        position: sticky;
+        top: 1rem;
+        height: fit-content;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .seo-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .seo-header h3 {
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    .seo-score-circle {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 0.75rem;
+    }
+
+    .circular-chart {
+        display: block;
+        margin: 0 auto;
+    }
+
+    .circle-bg {
+        fill: none;
+        stroke: #eee;
+        stroke-width: 3.8;
+    }
+
+    .circle {
+        fill: none;
+        stroke-width: 2.8;
+        stroke-linecap: round;
+        transition: stroke-dasharray 0.5s;
+    }
+
+    .score-text {
+        fill: #333;
+        font-size: 0.5em;
+        text-anchor: middle;
+        font-weight: bold;
+    }
+
+    .seo-stats {
+        text-align: center;
+        margin-bottom: 0.75rem;
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .seo-stats .stat span {
+        font-weight: bold;
+        color: #333;
+    }
+
+    .seo-issues {
+        font-size: 0.75rem;
+    }
+
+    .issue {
+        padding: 0.3rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .issue.success {
+        color: #28a745;
+    }
+
+    .no-issues {
+        color: #888;
+        text-align: center;
+        font-style: italic;
+    }
+
+    .seo-keywords {
+        margin-top: 0.75rem;
+    }
+
+    .seo-keywords h4 {
+        font-size: 0.8rem;
+        margin: 0 0 0.4rem 0;
+    }
+
+    .keyword-item {
+        padding: 0.2rem 0.4rem;
+        border-radius: 3px;
+        font-size: 0.7rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .keyword-item.good {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .keyword-item.warning {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .keyword-item.bad {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    /* ============ IMAGE PREVIEW ============ */
     .image-preview-container {
         background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 12px;
+        padding: 0.75rem;
+        border-radius: 8px;
         text-align: center;
     }
 
     .image-preview-container label {
         display: block;
         font-weight: 600;
-        margin-bottom: 1rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
     }
 
     .image-preview-container img {
         max-width: 100%;
-        max-height: 400px;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        max-height: 200px;
+        border-radius: 4px;
     }
 
     .btn-remove {
-        margin-top: 1rem;
-        padding: 0.5rem 1rem;
+        margin-top: 0.5rem;
+        padding: 0.3rem 0.6rem;
         background: #dc3545;
         color: white;
         border: none;
-        border-radius: 6px;
+        border-radius: 4px;
         cursor: pointer;
+        font-size: 0.8rem;
     }
 
-    /* Actions */
+    /* ============ ACTIONS ============ */
     .form-actions {
         display: flex;
         gap: 1rem;
         justify-content: flex-end;
+        align-items: center;
     }
 
-    .btn-primary {
-        padding: 1rem 2rem;
+    .form-actions .btn-primary,
+    .form-actions .btn-secondary {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 44px;
+        box-sizing: border-box;
+        line-height: 1;
+        margin: 0;
+        box-shadow: none;
+    }
+
+    .form-actions .btn-primary {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        border: none;
-        border-radius: 10px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s;
     }
 
-    .btn-primary:hover {
+    .form-actions .btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
 
-    .btn-secondary {
-        padding: 1rem 2rem;
+    .form-actions .btn-secondary {
         background: #6c757d;
         color: white;
-        border: none;
-        border-radius: 10px;
-        text-decoration: none;
-        font-size: 1rem;
+    }
+
+    .form-actions .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-2px);
     }
 
     .hidden {
         display: none !important;
     }
 
-    /* Responsive */
+    /* ============ RESPONSIVE ============ */
     @media (max-width: 768px) {
+        .studio-layout {
+            flex-direction: column;
+        }
+
+        .seo-panel {
+            width: 100%;
+            position: static;
+        }
+
         .ai-toolbar {
             flex-direction: column;
         }
 
         .ai-btn {
             width: 100%;
+            justify-content: center;
         }
 
-        .form-actions {
-            flex-direction: column;
+        .block-type-menu {
+            grid-template-columns: repeat(2, 1fr);
         }
     }
 </style>

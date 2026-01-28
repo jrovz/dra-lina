@@ -1,13 +1,15 @@
 :root {
-    --primary: #6C5CE7;
-    /* Morado suave */
-    --secondary: #0984E3;
-    /* Azul vibrante */
-    --accent: #A29BFE;
-    /* Lavanda */
-    --dark: #2D3436;
-    --light: #F9F9FB;
+    --primary: #8e44ad;
+    /* Deep Purple */
+    --secondary: #9b59b6;
+    /* Lighter Purple */
+    --accent: #e1bee7;
+    /* Lavender */
+    --dark: #2c3e50;
+    --light: #f3e5f5;
+    /* Very light purple bg */
     --white: #FFFFFF;
+    --text-muted: #7f8c8d;
 }
 
 body {
@@ -35,7 +37,7 @@ nav {
     color: var(--primary);
 }
 
-ul {
+nav ul {
     list-style: none;
     display: flex;
     gap: 2rem;
@@ -66,14 +68,14 @@ a:hover {
     justify-content: center;
     align-items: center;
     text-align: center;
-    background: linear-gradient(135deg, #FF6B6B22, #4ECDC422);
+    background: linear-gradient(135deg, rgba(142, 68, 173, 0.1), rgba(155, 89, 182, 0.1));
     padding: 0 10%;
 }
 
 .hero h1 {
     font-size: 3.5rem;
     margin-bottom: 1rem;
-    background: linear-gradient(to right, var(--primary), var(--secondary));
+    background: linear-gradient(to right, var(--primary), #d2b4de);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -92,4 +94,75 @@ a:hover {
 
 .btn-primary:hover {
     transform: translateY(-3px);
+}/* Specialists Section */
+.specialists-section {
+    padding: 4rem 10%;
+    text-align: center;
+}
+
+.specialists-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+    color: var(--dark);
+}
+
+.specialists-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.specialist-card {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.specialist-card:hover {
+    transform: translateY(-5px);
+}
+
+.spec-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    font-weight: bold;
+}
+
+.spec-role {
+    color: var(--primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+}
+
+.spec-bio {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+}
+
+.btn-link {
+    color: var(--primary);
+    font-weight: 600;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s;
+}
+
+.btn-link:hover {
+    border-bottom-color: var(--primary);
 }

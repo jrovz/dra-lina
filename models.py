@@ -31,6 +31,9 @@ class Appointment(db.Model):
     start_time = db.Column(db.DateTime, nullable=False)
     status = db.Column(db.String(50), default='pendiente_confirmacion') # pendiente_confirmacion, confirmada, completada
     confirmation_token = db.Column(db.String(500))
+    doctor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    doctor = db.relationship('User', foreign_keys=[doctor_id], backref='doctor_appointments')
+    service = db.relationship('Service')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class BlogPost(db.Model):
@@ -42,3 +45,23 @@ class BlogPost(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_published = db.Column(db.Boolean, default=True)
+
+class DoctorProfile(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False, default='Doctor') # Display name
+    specialty = db.Column(db.String(100), nullable=False)
+    bio = db.Column(db.Text)
+    color = db.Column(db.String(20), default='#3b82f6') # Hex color for calendar
+    user = db.relationship('User', backref=db.backref('doctor_profile', uselist=False))
+
+class WorkSchedule(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    day_of_week = db.Column(db.Integer, nullable=False) # 0=Monday, 6=Sunday
+    start_time = db.Column(db.Time, nullable=False)
+    end_time = db.Column(db.Time, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    doctor = db.relationship('User', backref='work_schedules')
+
