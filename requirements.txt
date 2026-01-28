@@ -11,3 +11,10 @@ itsdangerous
 openai>=1.0.0
 google-genai>=1.0.0
 requests
+
+# LangChain Dependencies
+langchain
+langchain-openai
+langchain-google-genai
+langgraph
+pydantic
