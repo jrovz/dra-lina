@@ -16,7 +16,7 @@
             <div class="card-icon">📝</div>
             <h3>Gestión de Blog</h3>
             <p>Escribe y publica nuevos artículos con asistencia de IA.</p>
-            <a href="{{ url_for('new_post') }}" class="btn-primary">Nuevo Artículo</a>
+            <a href="{{ url_for('admin.new_post') }}" class="btn-primary">Nuevo Artículo</a>
         </div>
 
         <div class="admin-card">
@@ -30,14 +30,14 @@
             <div class="card-icon">👨‍⚕️</div>
             <h3>Médicos</h3>
             <p>Gestiona perfiles y horarios del equipo médico.</p>
-            <a href="{{ url_for('admin_doctors') }}" class="btn-primary">Gestionar</a>
+            <a href="{{ url_for('admin.admin_doctors') }}" class="btn-primary">Gestionar</a>
         </div>
 
         <div class="admin-card">
             <div class="card-icon">🚪</div>
             <h3>Cerrar Sesión</h3>
             <p>Salir del panel de administración.</p>
-            <a href="{{ url_for('logout') }}" class="btn-logout">Salir</a>
+            <a href="{{ url_for('admin.logout') }}" class="btn-logout">Salir</a>
         </div>
     </div>
 </section>

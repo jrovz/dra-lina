@@ -1,0 +1,412 @@
+﻿<!doctype html>
+<html lang=en>
+  <head>
+    <title>werkzeug.routing.exceptions.BuildError: Could not build url for endpoint &#39;index&#39;. Did you mean &#39;public.index&#39; instead?
+ // Werkzeug Debugger</title>
+    <link rel="stylesheet" href="?__debugger__=yes&amp;cmd=resource&amp;f=style.css">
+    <link rel="shortcut icon"
+        href="?__debugger__=yes&amp;cmd=resource&amp;f=console.png">
+    <script src="?__debugger__=yes&amp;cmd=resource&amp;f=debugger.js"></script>
+    <script>
+      var CONSOLE_MODE = false,
+          EVALEX = true,
+          EVALEX_TRUSTED = false,
+          SECRET = "iYzToa33ELIHFHBsm3DE";
+    </script>
+  </head>
+  <body style="background-color: #fff">
+    <div class="debugger">
+<h1>werkzeug.routing.exceptions.BuildError</h1>
+<div class="detail">
+  <p class="errormsg">werkzeug.routing.exceptions.BuildError: Could not build url for endpoint &#39;index&#39;. Did you mean &#39;public.index&#39; instead?
+</p>
+</div>
+<h2 class="traceback">Traceback <em>(most recent call last)</em></h2>
+<div class="traceback">
+  <h3></h3>
+  <ul><li><div class="frame" id="frame-2222352209280">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py"</cite>,
+      line <em class="line">1536</em>,
+      in <code class="function">__call__</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws">    </span>) -&gt; cabc.Iterable[bytes]:</pre>
+<pre class="line before"><span class="ws">        </span>&#34;&#34;&#34;The WSGI server calls the Flask application object as the</pre>
+<pre class="line before"><span class="ws">        </span>WSGI application. This calls :meth:`wsgi_app`, which can be</pre>
+<pre class="line before"><span class="ws">        </span>wrapped to apply middleware.</pre>
+<pre class="line before"><span class="ws">        </span>&#34;&#34;&#34;</pre>
+<pre class="line current"><span class="ws">        </span>return self.wsgi_app(environ, start_response)
+<span class="ws">        </span>       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353240352">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py"</cite>,
+      line <em class="line">1514</em>,
+      in <code class="function">wsgi_app</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws">            </span>try:</pre>
+<pre class="line before"><span class="ws">                </span>ctx.push()</pre>
+<pre class="line before"><span class="ws">                </span>response = self.full_dispatch_request()</pre>
+<pre class="line before"><span class="ws">            </span>except Exception as e:</pre>
+<pre class="line before"><span class="ws">                </span>error = e</pre>
+<pre class="line current"><span class="ws">                </span>response = self.handle_exception(e)
+<span class="ws">                </span>           ^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">            </span>except:  # noqa: B001</pre>
+<pre class="line after"><span class="ws">                </span>error = sys.exc_info()[1]</pre>
+<pre class="line after"><span class="ws">                </span>raise</pre>
+<pre class="line after"><span class="ws">            </span>return response(environ, start_response)</pre>
+<pre class="line after"><span class="ws">        </span>finally:</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353239232">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py"</cite>,
+      line <em class="line">1511</em>,
+      in <code class="function">wsgi_app</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws">        </span>ctx = self.request_context(environ)</pre>
+<pre class="line before"><span class="ws">        </span>error: BaseException | None = None</pre>
+<pre class="line before"><span class="ws">        </span>try:</pre>
+<pre class="line before"><span class="ws">            </span>try:</pre>
+<pre class="line before"><span class="ws">                </span>ctx.push()</pre>
+<pre class="line current"><span class="ws">                </span>response = self.full_dispatch_request()
+<span class="ws">                </span>           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">            </span>except Exception as e:</pre>
+<pre class="line after"><span class="ws">                </span>error = e</pre>
+<pre class="line after"><span class="ws">                </span>response = self.handle_exception(e)</pre>
+<pre class="line after"><span class="ws">            </span>except:  # noqa: B001</pre>
+<pre class="line after"><span class="ws">                </span>error = sys.exc_info()[1]</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353240512">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py"</cite>,
+      line <em class="line">919</em>,
+      in <code class="function">full_dispatch_request</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws">            </span>request_started.send(self, _async_wrapper=self.ensure_sync)</pre>
+<pre class="line before"><span class="ws">            </span>rv = self.preprocess_request()</pre>
+<pre class="line before"><span class="ws">            </span>if rv is None:</pre>
+<pre class="line before"><span class="ws">                </span>rv = self.dispatch_request()</pre>
+<pre class="line before"><span class="ws">        </span>except Exception as e:</pre>
+<pre class="line current"><span class="ws">            </span>rv = self.handle_user_exception(e)
+<span class="ws">            </span>     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">        </span>return self.finalize_request(rv)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def finalize_request(</pre>
+<pre class="line after"><span class="ws">        </span>self,</pre>
+<pre class="line after"><span class="ws">        </span>rv: ft.ResponseReturnValue | HTTPException,</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353240192">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py"</cite>,
+      line <em class="line">917</em>,
+      in <code class="function">full_dispatch_request</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>try:</pre>
+<pre class="line before"><span class="ws">            </span>request_started.send(self, _async_wrapper=self.ensure_sync)</pre>
+<pre class="line before"><span class="ws">            </span>rv = self.preprocess_request()</pre>
+<pre class="line before"><span class="ws">            </span>if rv is None:</pre>
+<pre class="line current"><span class="ws">                </span>rv = self.dispatch_request()
+<span class="ws">                </span>     ^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">        </span>except Exception as e:</pre>
+<pre class="line after"><span class="ws">            </span>rv = self.handle_user_exception(e)</pre>
+<pre class="line after"><span class="ws">        </span>return self.finalize_request(rv)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def finalize_request(</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353241632">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py"</cite>,
+      line <em class="line">902</em>,
+      in <code class="function">dispatch_request</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws">            </span>and req.method == &#34;OPTIONS&#34;</pre>
+<pre class="line before"><span class="ws">        </span>):</pre>
+<pre class="line before"><span class="ws">            </span>return self.make_default_options_response()</pre>
+<pre class="line before"><span class="ws">        </span># otherwise dispatch to the handler for that endpoint</pre>
+<pre class="line before"><span class="ws">        </span>view_args: dict[str, t.Any] = req.view_args  # type: ignore[assignment]</pre>
+<pre class="line current"><span class="ws">        </span>return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+<span class="ws">        </span>       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def full_dispatch_request(self) -&gt; Response:</pre>
+<pre class="line after"><span class="ws">        </span>&#34;&#34;&#34;Dispatches the request and on top of that performs request</pre>
+<pre class="line after"><span class="ws">        </span>pre and postprocessing as well as HTTP exception catching and</pre>
+<pre class="line after"><span class="ws">        </span>error handling.</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353242432">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\app\routes\public.py"</cite>,
+      line <em class="line">14</em>,
+      in <code class="function">index</code></h4>
+  <div class="source "><pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws"></span>@public_bp.route(&#39;/&#39;)</pre>
+<pre class="line before"><span class="ws"></span>def index():</pre>
+<pre class="line before"><span class="ws">    </span>from app.models import User, DoctorProfile</pre>
+<pre class="line before"><span class="ws">    </span>doctors = User.query.join(DoctorProfile).filter(User.role == &#39;doctor&#39;).all()</pre>
+<pre class="line current"><span class="ws">    </span>return render_template(&#39;public/index.html&#39;, doctors=doctors)
+<span class="ws">    </span>       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws"></span>@public_bp.route(&#39;/blog&#39;)</pre>
+<pre class="line after"><span class="ws"></span>def blog():</pre>
+<pre class="line after"><span class="ws">    </span>from app.models import BlogPost</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353242592">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\templating.py"</cite>,
+      line <em class="line">150</em>,
+      in <code class="function">render_template</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws">        </span>a list is given, the first name to exist will be rendered.</pre>
+<pre class="line before"><span class="ws">    </span>:param context: The variables to make available in the template.</pre>
+<pre class="line before"><span class="ws">    </span>&#34;&#34;&#34;</pre>
+<pre class="line before"><span class="ws">    </span>app = current_app._get_current_object()  # type: ignore[attr-defined]</pre>
+<pre class="line before"><span class="ws">    </span>template = app.jinja_env.get_or_select_template(template_name_or_list)</pre>
+<pre class="line current"><span class="ws">    </span>return _render(app, template, context)
+<span class="ws">    </span>       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws"></span>def render_template_string(source: str, **context: t.Any) -&gt; str:</pre>
+<pre class="line after"><span class="ws">    </span>&#34;&#34;&#34;Render a template from the given source string with the given</pre>
+<pre class="line after"><span class="ws">    </span>context.</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353241952">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\templating.py"</cite>,
+      line <em class="line">131</em>,
+      in <code class="function">_render</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws"></span>def _render(app: Flask, template: Template, context: dict[str, t.Any]) -&gt; str:</pre>
+<pre class="line before"><span class="ws">    </span>app.update_template_context(context)</pre>
+<pre class="line before"><span class="ws">    </span>before_render_template.send(</pre>
+<pre class="line before"><span class="ws">        </span>app, _async_wrapper=app.ensure_sync, template=template, context=context</pre>
+<pre class="line before"><span class="ws">    </span>)</pre>
+<pre class="line current"><span class="ws">    </span>rv = template.render(context)
+<span class="ws">    </span>     ^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws">    </span>template_rendered.send(</pre>
+<pre class="line after"><span class="ws">        </span>app, _async_wrapper=app.ensure_sync, template=template, context=context</pre>
+<pre class="line after"><span class="ws">    </span>)</pre>
+<pre class="line after"><span class="ws">    </span>return rv</pre>
+<pre class="line after"><span class="ws"></span> </pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353242112">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\jinja2\environment.py"</cite>,
+      line <em class="line">1295</em>,
+      in <code class="function">render</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws">        </span>ctx = self.new_context(dict(*args, **kwargs))</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>try:</pre>
+<pre class="line before"><span class="ws">            </span>return self.environment.concat(self.root_render_func(ctx))  # type: ignore</pre>
+<pre class="line before"><span class="ws">        </span>except Exception:</pre>
+<pre class="line current"><span class="ws">            </span>self.environment.handle_exception()
+<span class="ws">            </span>^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>async def render_async(self, *args: t.Any, **kwargs: t.Any) -&gt; str:</pre>
+<pre class="line after"><span class="ws">        </span>&#34;&#34;&#34;This works similar to :meth:`render` but returns a coroutine</pre>
+<pre class="line after"><span class="ws">        </span>that when awaited returns the entire rendered template string.  This</pre>
+<pre class="line after"><span class="ws">        </span>requires the async feature to be enabled.</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353242752">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\jinja2\environment.py"</cite>,
+      line <em class="line">942</em>,
+      in <code class="function">handle_exception</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws">        </span>&#34;&#34;&#34;Exception handling helper.  This is used internally to either raise</pre>
+<pre class="line before"><span class="ws">        </span>rewritten exceptions or return a rendered traceback for the template.</pre>
+<pre class="line before"><span class="ws">        </span>&#34;&#34;&#34;</pre>
+<pre class="line before"><span class="ws">        </span>from .debug import rewrite_traceback_stack</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line current"><span class="ws">        </span>raise rewrite_traceback_stack(source=source)
+<span class="ws">        </span>^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">    </span>def join_path(self, template: str, parent: str) -&gt; str:</pre>
+<pre class="line after"><span class="ws">        </span>&#34;&#34;&#34;Join a template with the parent.  By default all the lookups are</pre>
+<pre class="line after"><span class="ws">        </span>relative to the loader root so this method returns the `template`</pre>
+<pre class="line after"><span class="ws">        </span>parameter unchanged, but if the paths should be relative to the</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353242912">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\templates\public\index.html"</cite>,
+      line <em class="line">17</em>,
+      in <code class="function">top-level template code</code></h4>
+  <div class="source "><pre class="line before"><span class="ws"></span>&lt;/head&gt;</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws"></span>&lt;body&gt;</pre>
+<pre class="line before"><span class="ws">    </span>&lt;header&gt;</pre>
+<pre class="line before"><span class="ws">        </span>&lt;nav&gt;</pre>
+<pre class="line current"><span class="ws">            </span>&lt;div class=&#34;logo&#34;&gt;&lt;a href=&#34;{{ url_for(&#39;index&#39;) }}&#34; style=&#34;color: inherit; text-decoration: none;&#34;&gt;Dra.</pre>
+<pre class="line after"><span class="ws">                    </span>Lina&lt;/a&gt;&lt;/div&gt;</pre>
+<pre class="line after"><span class="ws">            </span>&lt;ul&gt;</pre>
+<pre class="line after"><span class="ws">                </span>&lt;li&gt;&lt;a href=&#34;{{ url_for(&#39;index&#39;) }}&#34;&gt;Inicio&lt;/a&gt;&lt;/li&gt;</pre>
+<pre class="line after"><span class="ws">                </span>&lt;li&gt;&lt;a href=&#34;{{ url_for(&#39;blog&#39;) }}&#34;&gt;Blog de Salud&lt;/a&gt;&lt;/li&gt;</pre>
+<pre class="line after"><span class="ws">                </span>&lt;li&gt;&lt;a href=&#34;{{ url_for(&#39;reservar&#39;) }}&#34; class=&#34;cta&#34;&gt;Agendar Cita&lt;/a&gt;&lt;/li&gt;</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353243072">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py"</cite>,
+      line <em class="line">1121</em>,
+      in <code class="function">url_for</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws">            </span>)</pre>
+<pre class="line before"><span class="ws">        </span>except BuildError as error:</pre>
+<pre class="line before"><span class="ws">            </span>values.update(</pre>
+<pre class="line before"><span class="ws">                </span>_anchor=_anchor, _method=_method, _scheme=_scheme, _external=_external</pre>
+<pre class="line before"><span class="ws">            </span>)</pre>
+<pre class="line current"><span class="ws">            </span>return self.handle_url_build_error(error, endpoint, values)
+<span class="ws">            </span>       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">        </span>if _anchor is not None:</pre>
+<pre class="line after"><span class="ws">            </span>_anchor = _url_quote(_anchor, safe=&#34;%!#$&amp;&#39;()*+,/:;=?@&#34;)</pre>
+<pre class="line after"><span class="ws">            </span>rv = f&#34;{rv}#{_anchor}&#34;</pre>
+<pre class="line after"><span class="ws"></span> </pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353243392">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py"</cite>,
+      line <em class="line">1110</em>,
+      in <code class="function">url_for</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws">            </span>raise ValueError(&#34;When specifying &#39;_scheme&#39;, &#39;_external&#39; must be True.&#34;)</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>self.inject_url_defaults(endpoint, values)</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>try:</pre>
+<pre class="line current"><span class="ws">            </span>rv = url_adapter.build(  # type: ignore[union-attr]
+<span class="ws">            </span>     </pre>
+<pre class="line after"><span class="ws">                </span>endpoint,</pre>
+<pre class="line after"><span class="ws">                </span>values,</pre>
+<pre class="line after"><span class="ws">                </span>method=_method,</pre>
+<pre class="line after"><span class="ws">                </span>url_scheme=_scheme,</pre>
+<pre class="line after"><span class="ws">                </span>force_external=_external,</pre></div>
+</div>
+
+<li><div class="frame" id="frame-2222353243552">
+  <h4>File <cite class="filename">"C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\werkzeug\routing\map.py"</cite>,
+      line <em class="line">924</em>,
+      in <code class="function">build</code></h4>
+  <div class="source library"><pre class="line before"><span class="ws">        </span>else:</pre>
+<pre class="line before"><span class="ws">            </span>values = {}</pre>
+<pre class="line before"><span class="ws"></span> </pre>
+<pre class="line before"><span class="ws">        </span>rv = self._partial_build(endpoint, values, method, append_unknown)</pre>
+<pre class="line before"><span class="ws">        </span>if rv is None:</pre>
+<pre class="line current"><span class="ws">            </span>raise BuildError(endpoint, values, method, self)
+<span class="ws">            </span>^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">        </span>domain_part, path, websocket = rv</pre>
+<pre class="line after"><span class="ws">        </span>host = self.get_host(domain_part)</pre>
+<pre class="line after"><span class="ws"></span> </pre>
+<pre class="line after"><span class="ws">        </span>if url_scheme is None:</pre></div>
+</div>
+</ul>
+  <blockquote>werkzeug.routing.exceptions.BuildError: Could not build url for endpoint &#39;index&#39;. Did you mean &#39;public.index&#39; instead?
+</blockquote>
+</div>
+
+<div class="plain">
+    <p>
+      This is the Copy/Paste friendly version of the traceback.
+    </p>
+    <textarea cols="50" rows="10" name="code" readonly>Traceback (most recent call last):
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py&#34;, line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py&#34;, line 1514, in wsgi_app
+    response = self.handle_exception(e)
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py&#34;, line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py&#34;, line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py&#34;, line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py&#34;, line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\app\routes\public.py&#34;, line 14, in index
+    return render_template(&#39;public/index.html&#39;, doctors=doctors)
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\templating.py&#34;, line 150, in render_template
+    return _render(app, template, context)
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\templating.py&#34;, line 131, in _render
+    rv = template.render(context)
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\jinja2\environment.py&#34;, line 1295, in render
+    self.environment.handle_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\jinja2\environment.py&#34;, line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\templates\public\index.html&#34;, line 17, in top-level template code
+    &lt;div class=&#34;logo&#34;&gt;&lt;a href=&#34;{{ url_for(&#39;index&#39;) }}&#34; style=&#34;color: inherit; text-decoration: none;&#34;&gt;Dra.
+    ^^^^^^^^^^^^^
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py&#34;, line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py&#34;, line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+    
+  File &#34;C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\werkzeug\routing\map.py&#34;, line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint &#39;index&#39;. Did you mean &#39;public.index&#39; instead?
+</textarea>
+</div>
+<div class="explanation">
+  The debugger caught an exception in your WSGI application.  You can now
+  look at the traceback which led to the error.  <span class="nojavascript">
+  If you enable JavaScript you can also use additional features such as code
+  execution (if the evalex feature is enabled), automatic pasting of the
+  exceptions and much more.</span>
+</div>
+      <div class="footer">
+        Brought to you by <strong class="arthur">DON'T PANIC</strong>, your
+        friendly Werkzeug powered traceback interpreter.
+      </div>
+    </div>
+
+    <div class="pin-prompt">
+      <div class="inner">
+        <h3>Console Locked</h3>
+        <p>
+          The console is locked and needs to be unlocked by entering the PIN.
+          You can find the PIN printed out on the standard output of your
+          shell that runs the server.
+        <form>
+          <p>PIN:
+            <input type=text name=pin size=14>
+            <input type=submit name=btn value="Confirm Pin">
+        </form>
+      </div>
+    </div>
+  </body>
+</html>
+
+<!--
+
+Traceback (most recent call last):
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py", line 1536, in __call__
+    return self.wsgi_app(environ, start_response)
+           ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py", line 1514, in wsgi_app
+    response = self.handle_exception(e)
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py", line 1511, in wsgi_app
+    response = self.full_dispatch_request()
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py", line 919, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py", line 917, in full_dispatch_request
+    rv = self.dispatch_request()
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py", line 902, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)  # type: ignore[no-any-return]
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\app\routes\public.py", line 14, in index
+    return render_template('public/index.html', doctors=doctors)
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\templating.py", line 150, in render_template
+    return _render(app, template, context)
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\templating.py", line 131, in _render
+    rv = template.render(context)
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\jinja2\environment.py", line 1295, in render
+    self.environment.handle_exception()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\jinja2\environment.py", line 942, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\templates\public\index.html", line 17, in top-level template code
+    <div class="logo"><a href="{{ url_for('index') }}" style="color: inherit; text-decoration: none;">Dra.
+    ^^^^^^^^^^^^^
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py", line 1121, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\flask\app.py", line 1110, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+    
+  File "C:\Users\jrove\OneDrive\Escritorio\AntigravitiConf\dra-lina-web\.venv\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'index'. Did you mean 'public.index' instead?
+
+
+-->
+

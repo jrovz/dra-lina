@@ -4,7 +4,7 @@
 <section class="container" style="padding: 2rem;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
         <h1>Gestión de Médicos</h1>
-        <a href="{{ url_for('admin_doctors_new') }}" class="btn-primary">Nuevo Médico</a>
+        <a href="{{ url_for('admin.admin_doctors_new') }}" class="btn-primary">Nuevo Médico</a>
     </div>
 
     <div class="card"
@@ -28,9 +28,9 @@
                             style="display: inline-block; width: 20px; height: 20px; background: {{ doc.doctor_profile.color if doc.doctor_profile else '#ccc' }}; border-radius: 50%;"></span>
                     </td>
                     <td style="padding: 1rem;">
-                        <a href="{{ url_for('admin_doctors_edit', id=doc.id) }}"
+                        <a href="{{ url_for('admin.admin_doctors_edit', id=doc.id) }}"
                             style="margin-right: 10px; color: #667eea; text-decoration: none;">Editar</a>
-                        <a href="{{ url_for('admin_doctors_schedule', id=doc.id) }}"
+                        <a href="{{ url_for('admin.admin_doctors_schedule', id=doc.id) }}"
                             style="color: #28a745; text-decoration: none;">Horario</a>
                     </td>
                 </tr>
@@ -45,7 +45,8 @@
     </div>
 
     <div style="margin-top: 2rem;">
-        <a href="{{ url_for('admin_dashboard') }}" style="color: #666; text-decoration: none;">← Volver al Panel</a>
+        <a href="{{ url_for('admin.admin_dashboard') }}" style="color: #666; text-decoration: none;">← Volver al
+            Panel</a>
     </div>
 </section>
 {% endblock %}

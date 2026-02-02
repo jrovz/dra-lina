@@ -86,7 +86,7 @@
         </div>
 
         <!-- Main Form -->
-        <form action="{{ url_for('new_post') }}" method="POST" class="admin-form" id="post-form">
+        <form action="{{ url_for('admin.new_post') }}" method="POST" class="admin-form" id="post-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="content" id="content-hidden">
             <input type="hidden" name="featured_image_url" id="featured_image_url">
@@ -125,7 +125,7 @@
             <!-- Actions -->
             <div class="form-actions">
                 <button type="submit" class="btn-primary">🚀 Publicar</button>
-                <a href="{{ url_for('admin_dashboard') }}" class="btn-secondary">Cancelar</a>
+                <a href="{{ url_for('admin.admin_dashboard') }}" class="btn-secondary">Cancelar</a>
             </div>
         </form>
     </section>

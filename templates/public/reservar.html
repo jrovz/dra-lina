@@ -81,7 +81,7 @@
     <div id="patient-form-container" class="patient-form-container hidden">
         <h3>Confirmar Reserva: <span id="confirm-time-display"></span></h3>
 
-        <form action="{{ url_for('reservar') }}" method="POST" class="final-form">
+        <form action="{{ url_for('public.reservar') }}" method="POST" class="final-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="doctor_id" id="form_doctor_id">
             <input type="hidden" name="service_id" id="form_service_id">
