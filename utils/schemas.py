@@ -13,8 +13,12 @@ class SeoMetadataSchema(BaseModel):
     keywords: List[str] = Field(description="Lista de palabras clave objetivo.")
     slug_sugerido: str = Field(description="URL amigable sugerida para el artículo (ej: beneficios-yoga-embarazo).")
 
+class ContentBlock(BaseModel):
+    """Representa un bloque de contenido estructurado."""
+    type: str = Field(description="Tipo de bloque: 'heading', 'subheading', 'paragraph', 'list', 'quote'")
+    content: str = Field(description="Contenido del bloque. Para listas, usar saltos de línea para separar items.")
+
 class BlogDraftSchema(BaseModel):
-    """Esquema opcional si quisiéramos estructurar el blog completo (aunque suele ser HTML libre)."""
-    # Por ahora mantendremos el blog como string HTML, pero esto queda listo para el futuro
-    title: str
-    content_html: str
+    """Esquema estructurado para borradores de blog."""
+    title: str = Field(description="Título principal del artículo (H1).")
+    blocks: List[ContentBlock] = Field(description="Lista ordenada de bloques de contenido del artículo.")

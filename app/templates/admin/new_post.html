@@ -736,7 +736,16 @@
             const data = await res.json();
             if (data.error) { alert(data.error); return; }
 
-            parseHTMLToBlocks(data.content);
+            // El backend ahora retorna { content: { title: str, blocks: [...] } }
+            const draft = data.content;
+            
+            // Actualizar título si viene del servidor
+            if (draft.title) {
+                document.getElementById('title').value = draft.title;
+            }
+            
+            // Parsear bloques estructurados
+            parseJSONBlocks(draft.blocks || []);
 
         } catch (err) {
             alert('Error: ' + err.message);
@@ -745,6 +754,42 @@
         }
     });
 
+    function parseJSONBlocks(blocks) {
+        const container = document.getElementById('blocks-container');
+        
+        blocks.forEach(block => {
+            const type = block.type;
+            let content = block.content || '';
+            
+            // Mapear tipos del backend a tipos del frontend
+            switch (type) {
+                case 'heading':
+                    container.appendChild(createBlock('heading', content));
+                    break;
+                case 'subheading':
+                    container.appendChild(createBlock('subheading', content));
+                    break;
+                case 'paragraph':
+                    container.appendChild(createBlock('paragraph', content));
+                    break;
+                case 'list':
+                    // El contenido ya viene separado por saltos de línea
+                    const formattedList = content.split('\n').map(item => 
+                        item.startsWith('- ') ? item : '- ' + item
+                    ).join('\n');
+                    container.appendChild(createBlock('list', formattedList));
+                    break;
+                case 'quote':
+                    container.appendChild(createBlock('quote', content));
+                    break;
+                default:
+                    // Fallback a párrafo para tipos desconocidos
+                    container.appendChild(createBlock('paragraph', content));
+            }
+        });
+    }
+
+    // Mantener parseHTMLToBlocks para compatibilidad con contenido legacy
     function parseHTMLToBlocks(html) {
         const container = document.getElementById('blocks-container');
         const temp = document.createElement('div');

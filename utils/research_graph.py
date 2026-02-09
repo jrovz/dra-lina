@@ -1,12 +1,13 @@
 from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 from .llm_config import get_llm
 from .schemas import ResearchResult
 
 # Agente de Investigación Profunda (Deep Research)
-# Por ahora simularemos la búsqueda ya que no tenemos una API Key de búsqueda configurada (como Tavily)
-# En el futuro, reemplazaremos el nodo "search_web" con una llamada real.
+# Usa un modelo configurable via RunnableConfig en lugar de hardcoding.
+
+DEFAULT_MODEL = "gemini-2.0-flash"
 
 class ResearchState(TypedDict):
     topic: str
@@ -14,25 +15,29 @@ class ResearchState(TypedDict):
     content: List[str]
     final_report: dict
 
-def plan_node(state: ResearchState):
+def _get_model_from_config(config: RunnableConfig) -> str:
+    """Extrae el modelo de la configuración o usa el default."""
+    return config.get("configurable", {}).get("model", DEFAULT_MODEL)
+
+def plan_node(state: ResearchState, config: RunnableConfig):
     """Genera un plan de investigación (preguntas clave)."""
-    print(f"--- Planeando investigación sobre: {state['topic']} ---")
-    llm = get_llm("gemini-2.0-flash")
+    model = _get_model_from_config(config)
+    print(f"--- Planeando investigación sobre: {state['topic']} (modelo: {model}) ---")
+    llm = get_llm(model)
     prompt = f"Para investigar exhaustivamente sobre '{state['topic']}', lista 3 preguntas de búsqueda específicas y breves."
     response = llm.invoke(prompt)
-    # Simple splitting por líneas para simular pasos
     steps = [line.strip('- *') for line in response.content.split('\n') if line.strip()][:3]
     return {"steps": steps}
 
-def search_node(state: ResearchState):
-    """(Simulado) Busca información para cada paso."""
-    print("--- Buscando información ---")
+def search_node(state: ResearchState, config: RunnableConfig):
+    """Busca información para cada paso. (Simulado - requiere API de búsqueda real)."""
+    model = _get_model_from_config(config)
+    print(f"--- Buscando información (modelo: {model}) ---")
     steps = state['steps']
-    # En producción: Aquí iteraríamos steps y llamaríamos a Tavily/Google
-    # Simulación: Usamos el LLM para 'alucinar' información precisa basada en su conocimiento interno
-    # OJO: Esto es temporal hasta tener API de Search.
+    # TODO: Integrar TavilySearchResults o DuckDuckGoSearchResults aquí.
+    # Simulación actual usa LLM.
     
-    llm = get_llm("gemini-2.0-flash")
+    llm = get_llm(model)
     gathered_content = []
     
     for step in steps:
@@ -42,10 +47,11 @@ def search_node(state: ResearchState):
         
     return {"content": gathered_content}
 
-def synthesize_node(state: ResearchState):
+def synthesize_node(state: ResearchState, config: RunnableConfig):
     """Sintetiza la información en el formato final."""
-    print("--- Sintetizando reporte ---")
-    llm = get_llm("gemini-2.0-flash")
+    model = _get_model_from_config(config)
+    print(f"--- Sintetizando reporte (modelo: {model}) ---")
+    llm = get_llm(model)
     structured_llm = llm.with_structured_output(ResearchResult)
     
     all_content = "\n\n".join(state['content'])
@@ -59,7 +65,7 @@ def synthesize_node(state: ResearchState):
     """
     
     result = structured_llm.invoke(prompt)
-    return {"final_report": result.dict()} # Devolvemos dict para serialización fácil
+    return {"final_report": result.dict()}
 
 # Construcción del Grafo
 workflow = StateGraph(ResearchState)

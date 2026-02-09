@@ -18,9 +18,7 @@ def create_app(config_name=None):
     if config_name is None:
         config_name = os.getenv('FLASK_ENV', 'development')
 
-    app = Flask(__name__, 
-                template_folder='../templates',
-                static_folder='../static')
+    app = Flask(__name__)
     
     app.config.from_object(config[config_name])
 

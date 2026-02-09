@@ -12,7 +12,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 
 from .llm_config import get_llm
-from .schemas import ResearchResult, SeoMetadataSchema
+from .schemas import ResearchResult, SeoMetadataSchema, BlogDraftSchema
 from .research_graph import research_app
 
 load_dotenv()
@@ -36,15 +36,9 @@ def research_topic(topic: str, model: str = DEFAULT_TEXT_MODEL) -> dict:
         dict con puntos_clave, preguntas_frecuentes, keywords_seo
     """
     try:
-        # Ejecutamos el grafo
         inputs = {"topic": topic}
-        
-        # Invocamos el agente
-        # Nota: El agente internamente usa get_llm, que lee el modelo por defecto.
-        # Si queremos pasar el modelo dinámicamente, deberíamos pasarlo en el state 
-        # o configurar el grafo para aceptarlo. Por ahora usamos la config del grafo.
-        
-        result = research_app.invoke(inputs)
+        config = {"configurable": {"model": model}}
+        result = research_app.invoke(inputs, config=config)
         
         # El resultado final está en el estado 'final_report'
         if "final_report" in result and result["final_report"]:
@@ -76,39 +70,40 @@ def _fallback_research(topic: str, model: str) -> dict:
         }
 
 
-def generate_blog_draft(topic: str, tone: str = "profesional y empático", model: str = DEFAULT_TEXT_MODEL) -> str:
+def generate_blog_draft(topic: str, tone: str = "profesional y empático", model: str = DEFAULT_TEXT_MODEL) -> dict:
     """
-    Genera un borrador completo de blog usando LangChain.
+    Genera un borrador de blog estructurado usando LangChain con salida estructurada.
+    Retorna un dict con 'title' y 'blocks' (lista de ContentBlock).
     """
     llm = get_llm(model_name=model)
+    structured_llm = llm.with_structured_output(BlogDraftSchema)
     
-    template = """
+    prompt = f"""
     Eres la Dra. Lina, una reconocida especialista en salud familiar.
-    Escribe un artículo de blog completo sobre: "{topic}"
+    Genera un artículo de blog completo sobre: "{topic}"
     
     Requisitos:
-    - Extensión: 800-1200 palabras
+    - Extensión: 800-1200 palabras (distribuidas en bloques)
     - Tono: {tone}. El texto debe ser fácil de leer, entretenido y fluido.
     - Enfoque: Trata temas de salud general y familiar.
-    - Formato: HTML con etiquetas <h2>, <h3>, <p>, <ul>, <li>
-    - Incluir una introducción muy atractiva (hook).
-    - Desarrollar 3-4 secciones principales con subtítulos.
-    - Incluir consejos prácticos y aplicables.
-    - Terminar con una conclusión memorable y un llamado a la acción.
-    - Optimizado para SEO y experiencia de usuario.
+    - Incluir una introducción atractiva (primer bloque: paragraph).
+    - Desarrollar 3-4 secciones principales (heading + paragraphs).
+    - Incluir consejos prácticos (list blocks).
+    - Terminar con una conclusión memorable.
+    - Optimizado para SEO.
     
-    NO incluir etiquetas <html>, <head>, <body> ni <h1>.
-    Start directly with the content.
+    Estructura el contenido en bloques con tipos: heading, subheading, paragraph, list, quote.
+    Para listas, usa saltos de línea para separar items.
     """
     
-    prompt = ChatPromptTemplate.from_template(template)
-    chain = prompt | llm
-    
     try:
-        response = chain.invoke({"topic": topic, "tone": tone})
-        return response.content
+        result = structured_llm.invoke(prompt)
+        return result.model_dump()
     except Exception as e:
-        return f"<p>Error al generar contenido: {str(e)}</p>"
+        return {
+            "title": topic,
+            "blocks": [{"type": "paragraph", "content": f"Error al generar contenido: {str(e)}"}]
+        }
 
 
 def generate_seo_metadata(title: str, content: str) -> dict:
@@ -235,11 +230,12 @@ def generate_featured_image(title: str, model: str = "dall-e-3") -> str:
             return f"/static/generated_images/{filename}"
 
         else:
-            # OpenAI DALL-E 3
-            # Podemos usar langchain_community.utilities.dalle_image_generator.DallEAPIWrapper
-            # o mantener 'openai' directo. Mantendremos openai directo para no depender de langchain_community por ahora
-            # si solo tenemos langchain-openai.
+            # OpenAI DALL-E 3 - Ahora descargamos y guardamos localmente para consistencia
+            import uuid
+            import requests
+            from datetime import datetime
             from openai import OpenAI
+            
             client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
             
             response = client.images.generate(
@@ -249,7 +245,21 @@ def generate_featured_image(title: str, model: str = "dall-e-3") -> str:
                 quality="standard",
                 n=1,
             )
-            return response.data[0].url
+            image_url = response.data[0].url
+            
+            # Descargar imagen y guardar localmente
+            img_response = requests.get(image_url, timeout=30)
+            if img_response.status_code == 200:
+                filename = f"gen_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}.png"
+                save_path = os.path.join("static", "generated_images", filename)
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                
+                with open(save_path, "wb") as f:
+                    f.write(img_response.content)
+                    
+                return f"/static/generated_images/{filename}"
+            else:
+                return f"error: No se pudo descargar la imagen de DALL-E"
 
     except Exception as e:
         return f"error:{str(e)}"
