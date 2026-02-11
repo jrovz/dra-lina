@@ -2,7 +2,7 @@ import os
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-def get_llm(model_name: str = "gemini-2.0-flash", temperature: float = 0.7):
+def get_llm(model_name: str = "gpt-4o", temperature: float = 0.7):
     """
     Factory para obtener el modelo de chat adecuado según el nombre.
     Soporta modelos de OpenAI (gpt-*) y Google Gemini (gemini-*).

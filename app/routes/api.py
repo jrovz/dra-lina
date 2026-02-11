@@ -39,7 +39,7 @@ def api_research():
     from app.services.ai_service import research_topic
     data = request.get_json()
     topic = data.get('topic', '')
-    model = data.get('model', 'gemini-2.0-flash')
+    model = data.get('model', 'gpt-4o')
     if not topic:
         return jsonify({'error': 'Tema requerido'}), 400
     result = research_topic(topic, model=model)
@@ -52,7 +52,7 @@ def api_generate_draft():
     from app.services.ai_service import generate_blog_draft
     data = request.get_json()
     topic = data.get('topic', '')
-    model = data.get('model', 'gemini-2.0-flash')
+    model = data.get('model', 'gpt-4o')
     if not topic:
         return jsonify({'error': 'Tema requerido'}), 400
     result = generate_blog_draft(topic, model=model)
@@ -85,7 +85,7 @@ def api_ai_action():
     content = data.get('content', '')
     action = data.get('action', 'expand')
     context = data.get('context', '')
-    model = data.get('model', 'gemini-2.0-flash')
+    model = data.get('model', 'gpt-4o')
 
     if not content:
         return jsonify({'error': 'Contenido requerido'}), 400

@@ -71,14 +71,14 @@
                 <!-- Model Selector -->
                 <div class="model-selector-inline">
                     <select id="ai-model" title="Seleccionar modelo de IA">
+                        <optgroup label="OpenAI">
+                            <option value="gpt-4o" selected>GPT-4o</option>
+                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                        </optgroup>
                         <optgroup label="Google Gemini">
-                            <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash</option>
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
                             <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
                             <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
-                        </optgroup>
-                        <optgroup label="OpenAI">
-                            <option value="gpt-4o">GPT-4o</option>
-                            <option value="gpt-4o-mini">GPT-4o Mini</option>
                         </optgroup>
                     </select>
                 </div>
@@ -91,6 +91,7 @@
             <input type="hidden" name="content" id="content-hidden">
             <input type="hidden" name="featured_image_url" id="featured_image_url">
             <input type="hidden" name="title" id="title" value="">
+            <input type="hidden" name="references" id="references-hidden">
 
             <!-- Block Editor -->
             <div class="block-editor">
@@ -169,6 +170,8 @@
     const csrfToken = '{{ csrf_token() }}';
     let blockIdCounter = 0;
     let currentBlockId = null;
+    let researchReferences = [];  // Referencias de SERP API
+    let researchData = null;      // Datos completos de investigación
     let seoKeywords = [];
 
     // Get selected AI model
@@ -525,6 +528,11 @@
             return;
         }
         document.getElementById('content-hidden').value = html;
+
+        // Serializar referencias al campo hidden
+        if (researchReferences.length > 0) {
+            document.getElementById('references-hidden').value = JSON.stringify(researchReferences);
+        }
     });
 
     // ============ BLOCK TYPE MENU ============
@@ -632,10 +640,18 @@
 
     // Research
     document.getElementById('btn-research').addEventListener('click', async () => {
-        const topic = document.getElementById('title').value;
+        let topic = document.getElementById('title').value;
+        const promptInput = document.getElementById('ai-prompt');
+
+        // Si no hay título, intentar usar el prompt del chat
+        if (!topic && promptInput && promptInput.value.trim()) {
+            topic = promptInput.value.trim();
+            // También actualizar el campo title oculto
+            document.getElementById('title').value = topic;
+        }
+
         if (!topic) {
-            alert('Ingresa un título primero');
-            document.getElementById('title').focus();
+            alert('Ingresa un título o un prompt en el chat primero');
             return;
         }
 
@@ -653,7 +669,9 @@
             if (data.error) { alert(data.error); return; }
 
             const research = data.research;
+            researchData = research;  // Guardar investigación completa
             seoKeywords = research.keywords_seo || [];
+            researchReferences = research.references || [];
             let html = '';
 
             if (research.puntos_clave?.length) {
@@ -678,6 +696,18 @@
                 html += '</div></div>';
             }
 
+            // Mostrar referencias de SERP API
+            if (researchReferences.length > 0) {
+                html += '<div class="research-section"><h4>📚 Referencias</h4><ul class="references-list">';
+                researchReferences.forEach(ref => {
+                    const urlDisplay = ref.url ? `<a href="${ref.url}" target="_blank" rel="noopener">🔗</a>` : '';
+                    html += `<li><strong>${ref.title}</strong> ${urlDisplay}<br><small>${ref.snippet || ''}</small></li>`;
+                });
+                html += '</ul>';
+                html += '<button type="button" class="insert-btn" onclick="insertReferencesBlock()" style="margin-top:8px;">📚 Insertar Referencias al Blog</button>';
+                html += '</div>';
+            }
+
             document.getElementById('research-content').innerHTML = html;
             document.getElementById('research-panel').classList.remove('hidden');
 
@@ -696,6 +726,31 @@
         const container = document.getElementById('blocks-container');
         const block = createBlock(type, text);
         container.appendChild(block);
+    }
+
+    function insertReferencesBlock() {
+        if (researchReferences.length === 0) {
+            alert('No hay referencias disponibles');
+            return;
+        }
+
+        // Crear contenido de referencias como lista
+        let refsContent = researchReferences.map(ref => {
+            if (ref.url) {
+                return `${ref.title} - ${ref.url}`;
+            }
+            return ref.title;
+        }).join('\n');
+
+        const container = document.getElementById('blocks-container');
+
+        // Agregar heading de Referencias
+        container.appendChild(createBlock('heading', 'Referencias'));
+
+        // Agregar lista de referencias
+        container.appendChild(createBlock('list', refsContent));
+
+        alert('Sección de referencias agregada al final del blog');
     }
 
     function closeResearchPanel() {
@@ -730,7 +785,7 @@
             const res = await fetch('/admin/api/generate-draft', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
-                body: JSON.stringify({ topic, model })
+                body: JSON.stringify({ topic, model, research: researchData })
             });
 
             const data = await res.json();
@@ -738,12 +793,12 @@
 
             // El backend ahora retorna { content: { title: str, blocks: [...] } }
             const draft = data.content;
-            
+
             // Actualizar título si viene del servidor
             if (draft.title) {
                 document.getElementById('title').value = draft.title;
             }
-            
+
             // Parsear bloques estructurados
             parseJSONBlocks(draft.blocks || []);
 
@@ -756,11 +811,11 @@
 
     function parseJSONBlocks(blocks) {
         const container = document.getElementById('blocks-container');
-        
+
         blocks.forEach(block => {
             const type = block.type;
             let content = block.content || '';
-            
+
             // Mapear tipos del backend a tipos del frontend
             switch (type) {
                 case 'heading':
@@ -774,7 +829,7 @@
                     break;
                 case 'list':
                     // El contenido ya viene separado por saltos de línea
-                    const formattedList = content.split('\n').map(item => 
+                    const formattedList = content.split('\n').map(item =>
                         item.startsWith('- ') ? item : '- ' + item
                     ).join('\n');
                     container.appendChild(createBlock('list', formattedList));

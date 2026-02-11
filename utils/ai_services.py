@@ -19,7 +19,7 @@ load_dotenv()
 
 # --- MODEL CONFIG ---
 # Usamos un valor por defecto para el modelo de texto, pero permitimos override
-DEFAULT_TEXT_MODEL = "gemini-2.0-flash"
+DEFAULT_TEXT_MODEL = "gpt-4o"
 
 
 # --- FUNCIONES REFACTORIZADAS ---
@@ -70,17 +70,55 @@ def _fallback_research(topic: str, model: str) -> dict:
         }
 
 
-def generate_blog_draft(topic: str, tone: str = "profesional y empático", model: str = DEFAULT_TEXT_MODEL) -> dict:
+def generate_blog_draft(topic: str, tone: str = "profesional y empático", 
+                        model: str = DEFAULT_TEXT_MODEL,
+                        research: dict = None) -> dict:
     """
     Genera un borrador de blog estructurado usando LangChain con salida estructurada.
+    Si se proporciona `research`, usa los puntos clave y referencias de la investigación.
     Retorna un dict con 'title' y 'blocks' (lista de ContentBlock).
     """
     llm = get_llm(model_name=model)
     structured_llm = llm.with_structured_output(BlogDraftSchema)
     
+    # Construir contexto de investigación si está disponible
+    research_context = ""
+    references_section = ""
+    
+    if research and isinstance(research, dict):
+        # Puntos clave (lista de strings)
+        puntos = research.get('puntos_clave', [])
+        if puntos and isinstance(puntos, list):
+            research_context += "\n\nPuntos clave de la investigación:\n"
+            research_context += "\n".join(f"- {p}" for p in puntos if isinstance(p, str))
+        
+        # Preguntas frecuentes (puede ser lista de strings o de objetos)
+        faqs = research.get('preguntas_frecuentes', [])
+        if faqs and isinstance(faqs, list):
+            research_context += "\n\nPreguntas frecuentes a responder:\n"
+            for q in faqs:
+                if isinstance(q, str):
+                    research_context += f"- {q}\n"
+                elif isinstance(q, dict):
+                    research_context += f"- {q.get('pregunta', q.get('question', str(q)))}\n"
+        
+        # Referencias (puede ser lista de dicts o de strings)
+        refs = research.get('references', [])
+        if refs and isinstance(refs, list):
+            references_section = "\n\nFuentes consultadas (incluirlas al final):\n"
+            for ref in refs[:5]:
+                if isinstance(ref, dict):
+                    references_section += f"- {ref.get('title', 'Sin título')}"
+                    if ref.get('url'):
+                        references_section += f" ({ref['url']})"
+                    references_section += "\n"
+                elif isinstance(ref, str):
+                    references_section += f"- {ref}\n"
+    
     prompt = f"""
     Eres la Dra. Lina, una reconocida especialista en salud familiar.
     Genera un artículo de blog completo sobre: "{topic}"
+    {research_context}
     
     Requisitos:
     - Extensión: 800-1200 palabras (distribuidas en bloques)
@@ -88,9 +126,14 @@ def generate_blog_draft(topic: str, tone: str = "profesional y empático", model
     - Enfoque: Trata temas de salud general y familiar.
     - Incluir una introducción atractiva (primer bloque: paragraph).
     - Desarrollar 3-4 secciones principales (heading + paragraphs).
+    - Responder las preguntas frecuentes si están disponibles.
     - Incluir consejos prácticos (list blocks).
     - Terminar con una conclusión memorable.
     - Optimizado para SEO.
+    {references_section}
+    
+    IMPORTANTE: Si hay fuentes consultadas, incluir al final una sección "Referencias" (heading) 
+    con una lista (list block) de las fuentes con sus URLs.
     
     Estructura el contenido en bloques con tipos: heading, subheading, paragraph, list, quote.
     Para listas, usa saltos de línea para separar items.

@@ -47,6 +47,7 @@ class BlogPost(db.Model):
     content = db.Column(db.Text, nullable=False)
     featured_image_url = db.Column(db.String(500))
     seo_keywords = db.Column(db.String(300))
+    references = db.Column(db.Text)  # JSON string de referencias usadas
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_published = db.Column(db.Boolean, default=True)

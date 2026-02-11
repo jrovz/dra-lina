@@ -1,23 +1,29 @@
+import os
+import requests
 from typing import TypedDict, List
 from langgraph.graph import StateGraph, END
 from langchain_core.runnables import RunnableConfig
 from .llm_config import get_llm
-from .schemas import ResearchResult
+from .schemas import ResearchResult, Reference
 
 # Agente de Investigación Profunda (Deep Research)
-# Usa un modelo configurable via RunnableConfig en lugar de hardcoding.
+# Usa SERP API para búsquedas reales y LLM para síntesis.
 
-DEFAULT_MODEL = "gemini-2.0-flash"
+DEFAULT_MODEL = "gpt-4o"
+
 
 class ResearchState(TypedDict):
     topic: str
     steps: List[str]
     content: List[str]
+    references: List[dict]
     final_report: dict
+
 
 def _get_model_from_config(config: RunnableConfig) -> str:
     """Extrae el modelo de la configuración o usa el default."""
     return config.get("configurable", {}).get("model", DEFAULT_MODEL)
+
 
 def plan_node(state: ResearchState, config: RunnableConfig):
     """Genera un plan de investigación (preguntas clave)."""
@@ -29,43 +35,106 @@ def plan_node(state: ResearchState, config: RunnableConfig):
     steps = [line.strip('- *') for line in response.content.split('\n') if line.strip()][:3]
     return {"steps": steps}
 
+
 def search_node(state: ResearchState, config: RunnableConfig):
-    """Busca información para cada paso. (Simulado - requiere API de búsqueda real)."""
+    """Busca información usando SERP API (con fallback a simulación)."""
     model = _get_model_from_config(config)
-    print(f"--- Buscando información (modelo: {model}) ---")
+    print(f"--- Buscando información con SERP API ---")
+    
+    api_key = os.environ.get("SERP_API_KEY")
     steps = state['steps']
-    # TODO: Integrar TavilySearchResults o DuckDuckGoSearchResults aquí.
-    # Simulación actual usa LLM.
     
-    llm = get_llm(model)
     gathered_content = []
+    references = []
     
-    for step in steps:
-        fake_search_prompt = f"Imagina que buscaste '{step}' en Google. Resume la información más relevante y actual que encontrarías (3-4 frases)."
-        res = llm.invoke(fake_search_prompt)
-        gathered_content.append(f"Resultados para '{step}':\n{res.content}")
-        
-    return {"content": gathered_content}
+    for query in steps:
+        if api_key:
+            try:
+                # Usar SERP API real
+                response = requests.get(
+                    "https://serpapi.com/search",
+                    params={
+                        "q": query,
+                        "api_key": api_key,
+                        "num": 5,
+                        "hl": "es"
+                    },
+                    timeout=10
+                )
+                data = response.json()
+                results = data.get("organic_results", [])
+                
+                query_content = f"Resultados para '{query}':\n"
+                for r in results[:3]:
+                    title = r.get("title", "Sin título")
+                    link = r.get("link", "")
+                    snippet = r.get("snippet", "")
+                    
+                    references.append({
+                        "title": title,
+                        "url": link,
+                        "snippet": snippet
+                    })
+                    query_content += f"- {title}: {snippet}\n"
+                
+                gathered_content.append(query_content)
+                print(f"  ✓ Encontrados {len(results[:3])} resultados para: {query[:50]}...")
+                
+            except Exception as e:
+                print(f"  ⚠ Error SERP API: {e}. Usando fallback...")
+                # Fallback a simulación con LLM
+                llm = get_llm(model)
+                fake_prompt = f"Imagina que buscaste '{query}' en Google. Resume la información más relevante (3-4 frases)."
+                res = llm.invoke(fake_prompt)
+                gathered_content.append(f"Resultados para '{query}':\n{res.content}")
+        else:
+            # Sin API key: simulación con LLM
+            print(f"  ⚠ SERP_API_KEY no configurada. Usando simulación...")
+            llm = get_llm(model)
+            fake_prompt = f"Imagina que buscaste '{query}' en Google. Resume la información más relevante (3-4 frases)."
+            res = llm.invoke(fake_prompt)
+            gathered_content.append(f"Resultados para '{query}':\n{res.content}")
+    
+    return {"content": gathered_content, "references": references}
+
 
 def synthesize_node(state: ResearchState, config: RunnableConfig):
-    """Sintetiza la información en el formato final."""
+    """Sintetiza la información en el formato final, incluyendo referencias."""
     model = _get_model_from_config(config)
     print(f"--- Sintetizando reporte (modelo: {model}) ---")
     llm = get_llm(model)
     structured_llm = llm.with_structured_output(ResearchResult)
     
     all_content = "\n\n".join(state['content'])
+    references = state.get('references', [])
+    
+    # Incluir referencias en el prompt para que el LLM las considere
+    refs_text = ""
+    if references:
+        refs_text = "\n\nFuentes consultadas:\n" + "\n".join(
+            f"- {r['title']} ({r['url']})" for r in references[:10]
+        )
+    
     prompt = f"""
     Tema: {state['topic']}
     
     Información recopilada:
     {all_content}
+    {refs_text}
     
     Basado en esto, genera el reporte de investigación estructurado.
+    Incluye las referencias relevantes que se usaron.
     """
     
     result = structured_llm.invoke(prompt)
-    return {"final_report": result.dict()}
+    
+    # Asegurar que las referencias del search se incluyan en el resultado
+    result_dict = result.model_dump()
+    if references and not result_dict.get('references'):
+        result_dict['references'] = references[:10]
+    
+    return {"final_report": result_dict}
+
 
 # Construcción del Grafo
 workflow = StateGraph(ResearchState)

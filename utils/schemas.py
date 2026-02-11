@@ -1,11 +1,20 @@
-from typing import List
+from typing import List, Optional
 from pydantic import BaseModel, Field
+
+
+class Reference(BaseModel):
+    """Representa una fuente/referencia de búsqueda web."""
+    title: str = Field(description="Título de la fuente")
+    url: str = Field(default="", description="URL de la fuente")
+    snippet: str = Field(default="", description="Extracto/resumen de la fuente")
+
 
 class ResearchResult(BaseModel):
     """Esquema de resultados de investigación."""
     puntos_clave: List[str] = Field(description="Puntos clave encontrados sobre el tema.")
     preguntas_frecuentes: List[str] = Field(description="Preguntas comunes que tienen los pacientes sobre este tema.")
     keywords_seo: List[str] = Field(description="Palabras clave relevantes para SEO relacionadas con la investigación.")
+    references: Optional[List[Reference]] = Field(default_factory=list, description="Referencias/fuentes usadas en la investigación.")
 
 class SeoMetadataSchema(BaseModel):
     """Esquema para metadatos SEO."""

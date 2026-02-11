@@ -112,9 +112,13 @@ def new_post():
         title = request.form.get('title')
         content = request.form.get('content')
         featured_image_url = request.form.get('featured_image_url', '')
+        references = request.form.get('references', '')  # JSON string de referencias
+        
         new_p = BlogPost(title=title, content=content)
         if hasattr(new_p, 'featured_image_url'):
             new_p.featured_image_url = featured_image_url
+        if hasattr(new_p, 'references') and references:
+            new_p.references = references
         db.session.add(new_p)
         db.session.commit()
         return redirect(url_for('public.blog'))
@@ -245,7 +249,7 @@ def api_research():
     from utils.ai_services import research_topic
     data = request.get_json()
     topic = data.get('topic', '')
-    model = data.get('model', 'gemini-2.0-flash')
+    model = data.get('model', 'gpt-4o')
     if not topic:
         return jsonify({'error': 'Tema requerido'}), 400
     result = research_topic(topic, model=model)
@@ -259,10 +263,27 @@ def api_generate_draft():
     from utils.ai_services import generate_blog_draft
     data = request.get_json()
     topic = data.get('topic', '')
-    model = data.get('model', 'gemini-2.0-flash')
+    model = data.get('model', 'gpt-4o')
+    research = data.get('research', None)
+    
+    print(f"[DEBUG] generate-draft: topic='{topic}', model='{model}'")
+    print(f"[DEBUG] research present: {research is not None}")
+    if research:
+        print(f"[DEBUG] research keys: {list(research.keys()) if isinstance(research, dict) else type(research)}")
+    
     if not topic:
         return jsonify({'error': 'Tema requerido'}), 400
-    result = generate_blog_draft(topic, model=model)
+    
+    result = generate_blog_draft(topic, model=model, research=research)
+    
+    print(f"[DEBUG] result type: {type(result)}")
+    print(f"[DEBUG] result keys: {list(result.keys()) if isinstance(result, dict) else 'NOT A DICT'}")
+    if isinstance(result, dict):
+        blocks = result.get('blocks', [])
+        print(f"[DEBUG] blocks count: {len(blocks)}")
+        if blocks:
+            print(f"[DEBUG] first block: {blocks[0]}")
+    
     return jsonify({'content': result})
 
 
@@ -294,7 +315,7 @@ def api_ai_action():
     content = data.get('content', '')
     action = data.get('action', 'expand')
     context = data.get('context', '')
-    model = data.get('model', 'gemini-2.0-flash')
+    model = data.get('model', 'gpt-4o')
     
     if not content:
         return jsonify({'error': 'Contenido requerido'}), 400
