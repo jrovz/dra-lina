@@ -94,7 +94,9 @@ a:hover {
 
 .btn-primary:hover {
     transform: translateY(-3px);
-}/* Specialists Section */
+}
+
+/* Specialists Section */
 .specialists-section {
     padding: 4rem 10%;
     text-align: center;
@@ -165,4 +167,160 @@ a:hover {
 
 .btn-link:hover {
     border-bottom-color: var(--primary);
+}
+
+/* Historia del Consultorio */
+.historia-section {
+    padding: 5rem 10%;
+    background: linear-gradient(180deg, var(--light) 0%, var(--white) 100%);
+}
+
+.historia-content {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--white);
+    padding: 3.5rem 4rem;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(142, 68, 173, 0.08);
+    position: relative;
+    border-top: 4px solid var(--primary);
+}
+
+.historia-content h2 {
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.historia-accent {
+    width: 60px;
+    height: 4px;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    margin: 0 auto 2.5rem;
+    border-radius: 2px;
+}
+
+.historia-content p {
+    color: var(--dark);
+    font-size: 1.05rem;
+    line-height: 1.85;
+    margin-bottom: 1.2rem;
+    text-align: justify;
+}
+
+.historia-content p:last-child {
+    margin-bottom: 0;
+}
+
+.historia-content strong {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .historia-section {
+        padding: 3rem 5%;
+    }
+
+    .historia-content {
+        padding: 2rem 1.5rem;
+    }
+
+    .historia-content h2 {
+        font-size: 1.8rem;
+    }
+}
+
+/* Site Footer */
+.site-footer {
+    background: linear-gradient(135deg, #3b1554, #2a1040);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 2.5rem 10% 0;
+    margin-top: 3rem;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    padding-bottom: 2rem;
+}
+
+.footer-brand h3 {
+    font-size: 1.5rem;
+    color: var(--accent);
+    margin-bottom: 0.8rem;
+}
+
+.footer-brand p {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    max-width: 320px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.footer-links h4,
+.footer-legal h4 {
+    color: white;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+.footer-links ul,
+.footer-legal ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.footer-links li,
+.footer-legal li {
+    margin-bottom: 0.6rem;
+}
+
+.footer-links a,
+.footer-legal a {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.95rem;
+    transition: color 0.3s;
+}
+
+.footer-links a:hover,
+.footer-legal a:hover {
+    color: var(--accent);
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 1rem 0;
+    text-align: center;
+}
+
+.footer-bottom p {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .footer-content {
+        flex-direction: column;
+        gap: 2rem;
+        text-align: center;
+    }
+
+    .footer-brand p {
+        max-width: 100%;
+    }
+
+    .site-footer {
+        padding: 3rem 5% 0;
+    }
 }

@@ -32,6 +32,34 @@
             <a href="{{ url_for('public.reservar') }}" class="btn-primary">Reservar Valoración</a>
         </section>
 
+        <!-- Sección Historia del Consultorio -->
+        <section class="historia-section">
+            <div class="historia-content">
+                <h2>Nuestra Historia</h2>
+                <div class="historia-accent"></div>
+                <p>Hola! Yo soy <strong>Lina María Valencia Arias</strong>, nací en Pereira en 1972, me gradué como
+                    Médico y Cirujano en la Universidad Tecnológica de Pereira en 1996, hice mi año de Servicio Social
+                    Obligatorio en Mistrató Risaralda. Después de casarme, con mi esposo y nuestros hijos nos radicamos
+                    en Rovira Tolima, un municipio a una hora de Ibagué. He trabajado en el Hospital de Rovira, como
+                    médico general.</p>
+                <p>En 2005 me gradué de la Especialización en Gerencia de Servicios de Salud, en la Universidad
+                    Cooperativa de Colombia, sede Ibagué.</p>
+                <p>En 2009 me gradué de la Especialización en Salud Familiar de la Fundación Universitaria del Área
+                    Andina en Bogotá, donde aprendí el uso de la Ecografía como herramienta fundamental en la Atención
+                    Primaria en Salud.</p>
+                <p>Estuve encargada por más de 12 años de la atención de las gestantes del Hospital San Vicente de
+                    Rovira Tolima (Control Prenatal y Ecografías).</p>
+                <p>En los años 2024 y 2025 trabajé primero como médico de un equipo básico de salud y luego como
+                    coordinadora de los equipos básicos del municipio sin dejar mi práctica particular.</p>
+                <p>Actualmente me dedico a la práctica particular en mi consultorio, en Rovira, donde atiendo consulta
+                    médica y realizo estudios de <strong>Ecografía Clínica</strong>.</p>
+                <p>Soy esposa, madre de tres hijos, de 28, 26 y 20 años, y una convencida de que las tecnologías como el
+                    ultrasonido son el presente y futuro de la medicina.</p>
+                <p>Me gusta estar actualizada, en el momento estoy cursando un <strong>Grand Máster en Ecografía
+                        Clínica</strong>, para poder brindar cada vez un mejor servicio.</p>
+            </div>
+        </section>
+
         <!-- Sección de Especialistas -->
         <section class="specialists-section">
             <h2>Nuestros Especialistas</h2>
@@ -52,8 +80,31 @@
         </section>
     </main>
 
-    <footer>
-        <p>&copy; 2025 Dra. Lina. Todos los derechos reservados.</p>
+    <footer class="site-footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <h3>Dra. Lina</h3>
+                <p>Especialista en Salud Familiar y Ecografía Clínica. Cuidado integral para toda la familia en Rovira,
+                    Tolima.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Navegación</h4>
+                <ul>
+                    <li><a href="{{ url_for('public.index') }}">Inicio</a></li>
+                    <li><a href="{{ url_for('public.blog') }}">Blog de Salud</a></li>
+                    <li><a href="{{ url_for('public.reservar') }}">Agendar Cita</a></li>
+                </ul>
+            </div>
+            <div class="footer-legal">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="{{ url_for('public.terminos') }}">Términos y Condiciones</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2025 Dra. Lina María Valencia Arias. Todos los derechos reservados.</p>
+        </div>
     </footer>
 </body>
 

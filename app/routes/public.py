@@ -38,7 +38,10 @@ def reservar():
 
     if request.method == 'POST':
         name = request.form.get('name')
-        email = request.form.get('email')
+        document_id = request.form.get('document_id')
+        email = request.form.get('email', '').strip() or None
+        phone = request.form.get('phone')
+        age = request.form.get('age', type=int)
         service_id = request.form.get('service_id')
         doctor_id = request.form.get('doctor_id')
         date_str = request.form.get('date')
@@ -47,12 +50,18 @@ def reservar():
         full_date_str = f"{date_str}T{time_str}"
         start_time = datetime.strptime(full_date_str, '%Y-%m-%dT%H:%M')
 
-        patient = Patient.query.filter_by(email=email).first()
+        patient = Patient.query.filter_by(document_id=document_id).first()
         if not patient:
-            patient = Patient(name=name, email=email)
+            patient = Patient(name=name, document_id=document_id, email=email, phone=phone, age=age)
             db.session.add(patient)
+        else:
+            patient.name = name
+            patient.email = email
+            patient.phone = phone
+            patient.age = age
 
-        token = generate_confirmation_token(email)
+        token_seed = email if email else document_id
+        token = generate_confirmation_token(token_seed)
         appt = Appointment(
             patient=patient,
             service_id=service_id,
@@ -69,6 +78,11 @@ def reservar():
     services = Service.query.all()
     doctors = User.query.join(DoctorProfile).filter(User.role == 'doctor').all()
     return render_template('public/reservar.html', services=services, doctors=doctors)
+
+
+@public_bp.route('/terminos')
+def terminos():
+    return render_template('public/terminos.html')
 
 
 @public_bp.route('/confirmar/<token>')

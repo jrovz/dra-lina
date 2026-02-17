@@ -240,6 +240,50 @@ def admin_doctors_schedule(id):
     return render_template('admin/doctor_schedule.html', doctor=doctor, sched_map=sched_map)
 
 
+@admin_bp.route('/calendario')
+@login_required
+def admin_calendario():
+    from app.models import User, DoctorProfile
+    doctors = User.query.join(DoctorProfile).filter(User.role == 'doctor').all()
+    return render_template('admin/calendario.html', doctors=doctors)
+
+
+@admin_bp.route('/api/appointments')
+@login_required
+def api_appointments():
+    from app.models import Appointment, Patient, Service
+    doctor_id = request.args.get('doctor_id', type=int)
+    start_str = request.args.get('start')
+    end_str = request.args.get('end')
+
+    if not doctor_id:
+        return jsonify({'error': 'doctor_id requerido'}), 400
+
+    query = Appointment.query.filter_by(doctor_id=doctor_id)
+
+    if start_str:
+        start_date = datetime.strptime(start_str, '%Y-%m-%d')
+        query = query.filter(Appointment.start_time >= start_date)
+    if end_str:
+        end_date = datetime.strptime(end_str, '%Y-%m-%d')
+        end_date = end_date.replace(hour=23, minute=59, second=59)
+        query = query.filter(Appointment.start_time <= end_date)
+
+    appointments = query.order_by(Appointment.start_time).all()
+
+    result = []
+    for appt in appointments:
+        result.append({
+            'id': appt.id,
+            'start_time': appt.start_time.isoformat(),
+            'status': appt.status,
+            'patient_name': appt.patient.name if appt.patient else 'Sin nombre',
+            'service_name': appt.service.name if appt.service else 'Sin servicio',
+        })
+
+    return jsonify({'appointments': result})
+
+
 # --- AI API Endpoints ---
 
 @admin_bp.route('/api/research', methods=['POST'])
