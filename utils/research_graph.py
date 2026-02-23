@@ -9,7 +9,7 @@ from .schemas import ResearchResult, Reference
 # Agente de Investigación Profunda (Deep Research)
 # Usa SERP API para búsquedas reales y LLM para síntesis.
 
-DEFAULT_MODEL = "gpt-4o"
+DEFAULT_MODEL = "gpt-5.2"
 
 
 class ResearchState(TypedDict):

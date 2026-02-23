@@ -72,13 +72,12 @@
                 <div class="model-selector-inline">
                     <select id="ai-model" title="Seleccionar modelo de IA">
                         <optgroup label="OpenAI">
-                            <option value="gpt-4o" selected>GPT-4o</option>
-                            <option value="gpt-4o-mini">GPT-4o Mini</option>
+                            <option value="gpt-5.2" selected>GPT-5.2 (Best)</option>
+                            <option value="gpt-5-mini">GPT-5 Mini</option>
                         </optgroup>
                         <optgroup label="Google Gemini">
-                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                            <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
-                            <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                            <option value="gemini-3-pro">Gemini 3 Pro</option>
+                            <option value="gemini-3-flash">Gemini 3 Flash</option>
                         </optgroup>
                     </select>
                 </div>
@@ -86,11 +85,13 @@
         </div>
 
         <!-- Main Form -->
-        <form action="{{ url_for('admin.new_post') }}" method="POST" class="admin-form" id="post-form">
+        <form action="{{ url_for('admin.new_post', post_id=post.id) if post else url_for('admin.new_post') }}"
+            method="POST" class="admin-form" id="post-form">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="content" id="content-hidden">
-            <input type="hidden" name="featured_image_url" id="featured_image_url">
-            <input type="hidden" name="title" id="title" value="">
+            <input type="hidden" name="featured_image_url" id="featured_image_url"
+                value="{{ post.featured_image_url or '' if post else '' }}">
+            <input type="hidden" name="title" id="title" value="{{ post.title or '' if post else '' }}">
             <input type="hidden" name="references" id="references-hidden">
 
             <!-- Block Editor -->
@@ -125,7 +126,7 @@
 
             <!-- Actions -->
             <div class="form-actions">
-                <button type="submit" class="btn-primary">🚀 Publicar</button>
+                <button type="submit" class="btn-primary">{{ '💾 Guardar cambios' if post else '🚀 Publicar' }}</button>
                 <a href="{{ url_for('admin.admin_dashboard') }}" class="btn-secondary">Cancelar</a>
             </div>
         </form>
@@ -2282,4 +2283,25 @@
         }
     }
 </style>
+
+{% if post %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Load existing post content into the block editor
+        const existingContent = {{ post.content| tojson
+    }};
+    if (existingContent) {
+        parseHTMLToBlocks(existingContent);
+    }
+
+    // Show featured image if exists
+    const featuredUrl = document.getElementById('featured_image_url').value;
+    if (featuredUrl) {
+        const img = document.getElementById('generated-image');
+        img.src = featuredUrl;
+        document.getElementById('image-preview').classList.remove('hidden');
+    }
+    });
+</script>
+{% endif %}
 {% endblock %}

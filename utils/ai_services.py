@@ -19,7 +19,7 @@ load_dotenv()
 
 # --- MODEL CONFIG ---
 # Usamos un valor por defecto para el modelo de texto, pero permitimos override
-DEFAULT_TEXT_MODEL = "gpt-4o"
+DEFAULT_TEXT_MODEL = "gpt-5.2"
 
 
 # --- FUNCIONES REFACTORIZADAS ---
@@ -243,7 +243,7 @@ def generate_featured_image(title: str, model: str = "dall-e-3") -> str:
             client = genai.Client(api_key=api_key)
             
             response = client.models.generate_content(
-                model=model if "flash" in model else "gemini-2.0-flash",
+                model=model if "flash" in model else "gemini-3-flash",
                 contents=prompt_text,
                 config={'response_mime_type': 'image/png'}
             )

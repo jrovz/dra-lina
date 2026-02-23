@@ -103,26 +103,38 @@ def api_save_settings():
 
 
 @admin_bp.route('/blog/new', methods=['GET', 'POST'])
+@admin_bp.route('/blog/edit/<int:post_id>', methods=['GET', 'POST'])
 @login_required
-def new_post():
+def new_post(post_id=None):
     from app.extensions import db
     from app.models import BlogPost
+
+    post = BlogPost.query.get_or_404(post_id) if post_id else None
 
     if request.method == 'POST':
         title = request.form.get('title')
         content = request.form.get('content')
         featured_image_url = request.form.get('featured_image_url', '')
-        references = request.form.get('references', '')  # JSON string de referencias
-        
-        new_p = BlogPost(title=title, content=content)
-        if hasattr(new_p, 'featured_image_url'):
-            new_p.featured_image_url = featured_image_url
-        if hasattr(new_p, 'references') and references:
-            new_p.references = references
-        db.session.add(new_p)
+        references = request.form.get('references', '')
+
+        if post:
+            post.title = title
+            post.content = content
+            post.featured_image_url = featured_image_url
+            if references:
+                post.references = references
+        else:
+            post = BlogPost(title=title, content=content)
+            if hasattr(post, 'featured_image_url'):
+                post.featured_image_url = featured_image_url
+            if hasattr(post, 'references') and references:
+                post.references = references
+            db.session.add(post)
+
         db.session.commit()
         return redirect(url_for('public.blog'))
-    return render_template('admin/new_post.html')
+
+    return render_template('admin/new_post.html', post=post)
 
 
 @admin_bp.route('/doctors')
@@ -240,6 +252,37 @@ def admin_doctors_schedule(id):
     return render_template('admin/doctor_schedule.html', doctor=doctor, sched_map=sched_map)
 
 
+@admin_bp.route('/doctors/<int:id>/delete', methods=['POST'])
+@login_required
+def admin_doctors_delete(id):
+    from app.extensions import db
+    from app.models import User, DoctorProfile, WorkSchedule, Appointment
+
+    doctor_user = User.query.get_or_404(id)
+    if doctor_user.role != 'doctor':
+        flash('No es un médico', 'danger')
+        return redirect(url_for('admin.admin_doctors'))
+
+    # Nullify references in appointments
+    Appointment.query.filter_by(doctor_id=id).update({'doctor_id': None})
+    
+    # Delete schedules
+    WorkSchedule.query.filter_by(doctor_id=id).delete()
+    
+    # Delete profile
+    profile = DoctorProfile.query.filter_by(user_id=id).first()
+    if profile:
+        db.session.delete(profile)
+        
+    # Delete the user
+    db.session.delete(doctor_user)
+    db.session.commit()
+    
+    flash('Médico eliminado correctamente', 'success')
+    return redirect(url_for('admin.admin_doctors'))
+
+
+
 @admin_bp.route('/calendario')
 @login_required
 def admin_calendario():
@@ -282,6 +325,46 @@ def api_appointments():
         })
 
     return jsonify({'appointments': result})
+
+
+# --- Blog Management API Endpoints ---
+
+@admin_bp.route('/api/posts')
+@login_required
+def api_list_posts():
+    """Devuelve la lista de todos los blog posts."""
+    from app.models import BlogPost
+    posts = BlogPost.query.order_by(BlogPost.created_at.desc()).all()
+    return jsonify({'posts': [{
+        'id': p.id,
+        'title': p.title,
+        'is_published': p.is_published,
+        'created_at': p.created_at.strftime('%d %b, %Y') if p.created_at else ''
+    } for p in posts]})
+
+
+@admin_bp.route('/api/posts/<int:post_id>/toggle', methods=['POST'])
+@login_required
+def api_toggle_post(post_id):
+    """Alterna la visibilidad de un blog post."""
+    from app.extensions import db
+    from app.models import BlogPost
+    post = BlogPost.query.get_or_404(post_id)
+    post.is_published = not post.is_published
+    db.session.commit()
+    return jsonify({'success': True, 'is_published': post.is_published})
+
+
+@admin_bp.route('/api/posts/<int:post_id>', methods=['DELETE'])
+@login_required
+def api_delete_post(post_id):
+    """Elimina un blog post."""
+    from app.extensions import db
+    from app.models import BlogPost
+    post = BlogPost.query.get_or_404(post_id)
+    db.session.delete(post)
+    db.session.commit()
+    return jsonify({'success': True})
 
 
 # --- AI API Endpoints ---

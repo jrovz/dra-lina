@@ -31,7 +31,14 @@
                         <a href="{{ url_for('admin.admin_doctors_edit', id=doc.id) }}"
                             style="margin-right: 10px; color: #667eea; text-decoration: none;">Editar</a>
                         <a href="{{ url_for('admin.admin_doctors_schedule', id=doc.id) }}"
-                            style="color: #28a745; text-decoration: none;">Horario</a>
+                            style="margin-right: 10px; color: #28a745; text-decoration: none;">Horario</a>
+                        <form action="{{ url_for('admin.admin_doctors_delete', id=doc.id) }}" method="POST"
+                            style="display: inline;"
+                            onsubmit="return confirm('¿Estás seguro de que quieres eliminar este médico?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                            <button type="submit"
+                                style="background: none; border: none; color: #dc3545; cursor: pointer; font-size: 1rem; text-decoration: none; padding: 0;">Eliminar</button>
+                        </form>
                     </td>
                 </tr>
                 {% else %}
