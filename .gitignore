@@ -21,3 +21,8 @@ instance/
 dist/
 build/
 *.egg-info/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
