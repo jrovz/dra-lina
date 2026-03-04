@@ -2,11 +2,13 @@
 Rutas del panel de administración.
 """
 import os
-import re
+import logging
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -48,58 +50,15 @@ def admin_dashboard():
     gemini_configured = bool(gemini_key and not gemini_key.startswith('AIza-tu'))
     openai_configured = bool(openai_key and not openai_key.startswith('sk-tu'))
 
-    gemini_masked = (gemini_key[:8] + '...' + gemini_key[-4:]) if len(gemini_key) > 12 else ''
-    openai_masked = (openai_key[:7] + '...' + openai_key[-4:]) if len(openai_key) > 11 else ''
-
     return render_template(
         'admin/dashboard.html',
         gemini_configured=gemini_configured,
-        openai_configured=openai_configured,
-        gemini_key_masked=gemini_masked,
-        openai_key_masked=openai_masked
+        openai_configured=openai_configured
     )
 
 
-@admin_bp.route('/api/settings', methods=['POST'])
-@login_required
-def api_save_settings():
-    data = request.get_json()
-    gemini_key = data.get('gemini_key', '').strip()
-    openai_key = data.get('openai_key', '').strip()
-
-    env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env')
-
-    def is_valid_key(key):
-        return key and '...' not in key and len(key) > 20
-
-    try:
-        if os.path.exists(env_path):
-            with open(env_path, 'r') as f:
-                content = f.read()
-        else:
-            content = ''
-
-        if is_valid_key(gemini_key):
-            if 'GEMINI_API_KEY=' in content:
-                content = re.sub(r'GEMINI_API_KEY=.*', f'GEMINI_API_KEY={gemini_key}', content)
-            else:
-                content += f'\nGEMINI_API_KEY={gemini_key}'
-            os.environ['GEMINI_API_KEY'] = gemini_key
-
-        if is_valid_key(openai_key):
-            if 'OPENAI_API_KEY=' in content:
-                content = re.sub(r'OPENAI_API_KEY=.*', f'OPENAI_API_KEY={openai_key}', content)
-            else:
-                content += f'\nOPENAI_API_KEY={openai_key}'
-            os.environ['OPENAI_API_KEY'] = openai_key
-
-        with open(env_path, 'w') as f:
-            f.write(content)
-
-        return jsonify({'success': True})
-
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
+# REMOVED: api_save_settings endpoint — security vulnerability.
+# API keys must be configured via environment variables on the server, not the web panel.
 
 
 @admin_bp.route('/blog/new', methods=['GET', 'POST'])
@@ -393,23 +352,11 @@ def api_generate_draft():
     model = data.get('model', 'gpt-4o')
     research = data.get('research', None)
     
-    print(f"[DEBUG] generate-draft: topic='{topic}', model='{model}'")
-    print(f"[DEBUG] research present: {research is not None}")
-    if research:
-        print(f"[DEBUG] research keys: {list(research.keys()) if isinstance(research, dict) else type(research)}")
-    
     if not topic:
         return jsonify({'error': 'Tema requerido'}), 400
     
+    logger.info("Generating draft: topic='%s', model='%s', has_research=%s", topic, model, research is not None)
     result = generate_blog_draft(topic, model=model, research=research)
-    
-    print(f"[DEBUG] result type: {type(result)}")
-    print(f"[DEBUG] result keys: {list(result.keys()) if isinstance(result, dict) else 'NOT A DICT'}")
-    if isinstance(result, dict):
-        blocks = result.get('blocks', [])
-        print(f"[DEBUG] blocks count: {len(blocks)}")
-        if blocks:
-            print(f"[DEBUG] first block: {blocks[0]}")
     
     return jsonify({'content': result})
 

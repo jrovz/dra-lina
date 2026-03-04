@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, time
 import os
-from models import Appointment, WorkSchedule, Service
+from app.models import Appointment, WorkSchedule, Service
 
 def get_available_slots(doctor_id, date_obj, duration_minutes):
     """

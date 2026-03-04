@@ -1,8 +1,11 @@
 """
 Rutas públicas: Index, Blog, Reservas.
 """
+import logging
 from flask import Blueprint, render_template, request, flash, redirect, url_for
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 public_bp = Blueprint('public', __name__)
 
@@ -62,6 +65,17 @@ def reservar():
 
         token_seed = email if email else document_id
         token = generate_confirmation_token(token_seed)
+
+        # Validate availability before creating
+        from app.services.booking import check_availability
+        service = Service.query.get(service_id)
+        duration = service.duration_minutes if service else 30
+        if not check_availability(service_id, start_time, duration):
+            flash('El horario seleccionado ya no está disponible. Por favor elige otro.', 'danger')
+            services = Service.query.all()
+            doctors = User.query.join(DoctorProfile).filter(User.role == 'doctor').all()
+            return render_template('public/reservar.html', services=services, doctors=doctors)
+
         appt = Appointment(
             patient=patient,
             service_id=service_id,
@@ -72,7 +86,7 @@ def reservar():
         db.session.add(appt)
         db.session.commit()
 
-        print(f"Token generado para {email}: {token}")
+        logger.info("Appointment created for patient %s at %s", document_id, start_time)
         return render_template('public/success_booking.html', email=email)
 
     services = Service.query.all()
@@ -97,6 +111,8 @@ def confirmar_cita(token):
         if appt:
             appt.status = 'confirmada'
             db.session.commit()
-            return "Cita confirmada con éxito. ¡Te esperamos!"
+            flash('¡Cita confirmada con éxito! Te esperamos.', 'success')
+            return redirect(url_for('public.index'))
 
-    return "Token inválido o expirado.", 400
+    flash('Token inválido o expirado.', 'danger')
+    return redirect(url_for('public.index'))

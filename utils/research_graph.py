@@ -1,6 +1,9 @@
 import os
+import logging
 import requests
 from typing import TypedDict, List
+
+logger = logging.getLogger(__name__)
 from langgraph.graph import StateGraph, END
 from langchain_core.runnables import RunnableConfig
 from .llm_config import get_llm
@@ -28,7 +31,7 @@ def _get_model_from_config(config: RunnableConfig) -> str:
 def plan_node(state: ResearchState, config: RunnableConfig):
     """Genera un plan de investigación (preguntas clave)."""
     model = _get_model_from_config(config)
-    print(f"--- Planeando investigación sobre: {state['topic']} (modelo: {model}) ---")
+    logger.info("Planning research on: %s (model: %s)", state['topic'], model)
     llm = get_llm(model)
     prompt = f"Para investigar exhaustivamente sobre '{state['topic']}', lista 3 preguntas de búsqueda específicas y breves."
     response = llm.invoke(prompt)
@@ -39,7 +42,7 @@ def plan_node(state: ResearchState, config: RunnableConfig):
 def search_node(state: ResearchState, config: RunnableConfig):
     """Busca información usando SERP API (con fallback a simulación)."""
     model = _get_model_from_config(config)
-    print(f"--- Buscando información con SERP API ---")
+    logger.info("Searching information with SERP API")
     
     api_key = os.environ.get("SERP_API_KEY")
     steps = state['steps']
@@ -78,10 +81,10 @@ def search_node(state: ResearchState, config: RunnableConfig):
                     query_content += f"- {title}: {snippet}\n"
                 
                 gathered_content.append(query_content)
-                print(f"  ✓ Encontrados {len(results[:3])} resultados para: {query[:50]}...")
+                logger.info("Found %d results for: %s...", len(results[:3]), query[:50])
                 
             except Exception as e:
-                print(f"  ⚠ Error SERP API: {e}. Usando fallback...")
+                logger.warning("SERP API error: %s. Using fallback.", e)
                 # Fallback a simulación con LLM
                 llm = get_llm(model)
                 fake_prompt = f"Imagina que buscaste '{query}' en Google. Resume la información más relevante (3-4 frases)."
@@ -89,7 +92,7 @@ def search_node(state: ResearchState, config: RunnableConfig):
                 gathered_content.append(f"Resultados para '{query}':\n{res.content}")
         else:
             # Sin API key: simulación con LLM
-            print(f"  ⚠ SERP_API_KEY no configurada. Usando simulación...")
+            logger.warning("SERP_API_KEY not configured. Using simulation.")
             llm = get_llm(model)
             fake_prompt = f"Imagina que buscaste '{query}' en Google. Resume la información más relevante (3-4 frases)."
             res = llm.invoke(fake_prompt)
@@ -101,7 +104,7 @@ def search_node(state: ResearchState, config: RunnableConfig):
 def synthesize_node(state: ResearchState, config: RunnableConfig):
     """Sintetiza la información en el formato final, incluyendo referencias."""
     model = _get_model_from_config(config)
-    print(f"--- Sintetizando reporte (modelo: {model}) ---")
+    logger.info("Synthesizing report (model: %s)", model)
     llm = get_llm(model)
     structured_llm = llm.with_structured_output(ResearchResult)
     

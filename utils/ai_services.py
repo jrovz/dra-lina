@@ -5,7 +5,10 @@ Refactorizado para usar LangChain y LangGraph.
 import os
 import json
 import re
+import logging
 from typing import List
+
+logger = logging.getLogger(__name__)
 from dotenv import load_dotenv
 
 from langchain_core.prompts import ChatPromptTemplate
@@ -47,13 +50,13 @@ def research_topic(topic: str, model: str = DEFAULT_TEXT_MODEL) -> dict:
             return _fallback_research(topic, model)
 
     except Exception as e:
-        print(f"Error en LangGraph research: {e}")
+        logger.error("LangGraph research error: %s", e)
         return _fallback_research(topic, model)
 
 
 def _fallback_research(topic: str, model: str) -> dict:
     """Fallback usando una cadena simple si el grafo falla."""
-    print("Usando fallback research...")
+    logger.info("Using fallback research")
     llm = get_llm(model_name=model)
     structured_llm = llm.with_structured_output(ResearchResult)
     
