@@ -24,7 +24,7 @@ export default async function HomePage() {
   return (
     <>
       {/* Hero */}
-      <section className="relative pt-24 pb-20 overflow-hidden">
+      <section className="relative pt-20 pb-12 md:pt-24 md:pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 via-white to-violet-50" />
         <BackgroundOrbs /> {/* Premium moving orbs */}
 
@@ -64,7 +64,7 @@ export default async function HomePage() {
       </section>
 
       {/* Historia */}
-      <section className="relative py-20 bg-white overflow-hidden">
+      <section className="relative py-12 md:py-20 bg-white overflow-hidden">
         <AnimatedSection className="max-w-4xl mx-auto px-6 relative z-10">
           <h2 className="text-3xl font-bold text-slate-900 text-center">
             Mi Historia
@@ -114,7 +114,7 @@ export default async function HomePage() {
 
       {/* Servicios */}
       {services.length > 0 && (
-        <section className="py-20 bg-slate-50 relative overflow-hidden">
+        <section className="py-12 md:py-20 bg-slate-50 relative overflow-hidden">
           <div className="max-w-6xl mx-auto px-6 relative z-10">
             <AnimatedSection>
               <h2 className="text-3xl font-bold text-slate-900 text-center">
@@ -136,7 +136,7 @@ export default async function HomePage() {
 
       {/* Doctores */}
       {doctors.length > 0 && (
-        <section className="py-20 bg-white">
+        <section className="py-12 md:py-20 bg-white">
           <div className="max-w-6xl mx-auto px-6">
             <AnimatedSection>
               <h2 className="text-3xl font-bold text-slate-900 text-center">
@@ -157,7 +157,7 @@ export default async function HomePage() {
       )}
 
       {/* CTA */}
-      <section className="py-20 bg-gradient-to-br from-indigo-600 to-violet-700 relative overflow-hidden">
+      <section className="py-12 md:py-20 bg-gradient-to-br from-indigo-600 to-violet-700 relative overflow-hidden">
         {/* Abstract CTA decoration */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white opacity-5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-indigo-300 opacity-20 rounded-full blur-2xl" />

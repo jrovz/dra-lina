@@ -75,23 +75,25 @@ export default function Header() {
 
             {/* Mobile menu */}
             {open && (
-                <div className="md:hidden bg-white border-t border-slate-100 px-6 py-4 space-y-3">
-                    <Link href="/" className="block text-slate-700 font-medium" onClick={() => setOpen(false)}>
+                <div className="md:hidden absolute top-16 left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-slate-200/60 shadow-xl px-6 py-6 space-y-2">
+                    <Link href="/" className="block py-3 text-slate-700 font-medium hover:text-indigo-600 transition-colors" onClick={() => setOpen(false)}>
                         Inicio
                     </Link>
-                    <Link href="/blog" className="block text-slate-700 font-medium" onClick={() => setOpen(false)}>
+                    <Link href="/blog" className="block py-3 text-slate-700 font-medium hover:text-indigo-600 transition-colors" onClick={() => setOpen(false)}>
                         Blog de Salud
                     </Link>
-                    <Link href="/doctores" className="block text-slate-700 font-medium" onClick={() => setOpen(false)}>
+                    <Link href="/doctores" className="block py-3 text-slate-700 font-medium hover:text-indigo-600 transition-colors" onClick={() => setOpen(false)}>
                         Doctores
                     </Link>
-                    <Link
-                        href="/reservar"
-                        className="block text-center py-2 rounded-full bg-indigo-600 text-white font-semibold"
-                        onClick={() => setOpen(false)}
-                    >
-                        Agendar Cita
-                    </Link>
+                    <div className="pt-4">
+                        <Link
+                            href="/reservar"
+                            className="block text-center py-4 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold shadow-lg shadow-indigo-500/25 active:scale-95 transition-all"
+                            onClick={() => setOpen(false)}
+                        >
+                            Agendar Cita
+                        </Link>
+                    </div>
                 </div>
             )}
         </header>

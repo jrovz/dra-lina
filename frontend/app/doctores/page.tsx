@@ -16,7 +16,7 @@ export default async function DoctoresPage() {
     } catch { /* API unavailable */ }
 
     return (
-        <div className="pt-24 pb-16">
+        <div className="pt-20 pb-12 md:pt-24 md:pb-16">
             <div className="max-w-6xl mx-auto px-6">
                 <h1 className="text-3xl md:text-4xl font-bold text-slate-900">
                     Nuestro Equipo Médico

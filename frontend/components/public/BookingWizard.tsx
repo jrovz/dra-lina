@@ -161,10 +161,10 @@ export default function BookingWizard() {
                                 {slotsLoading ? (
                                     <p className="text-slate-400 text-sm">Cargando horarios...</p>
                                 ) : slots.length > 0 ? (
-                                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                                    <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-4 gap-3">
                                         {slots.map((slot: string) => (
                                             <button key={slot} onClick={() => setData({ ...data, time: slot })}
-                                                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${data.time === slot ? "bg-indigo-600 text-white" : "bg-slate-50 hover:bg-indigo-50 text-slate-700"
+                                                className={`px-3 py-3 rounded-xl text-sm font-medium transition-all ${data.time === slot ? "bg-indigo-600 text-white shadow-md shadow-indigo-200" : "bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-700"
                                                     }`}>
                                                 {slot}
                                             </button>
@@ -176,11 +176,11 @@ export default function BookingWizard() {
                             </div>
                         )}
                     </div>
-                    <div className="mt-6 flex gap-3">
-                        <button onClick={() => setStep("service")} className="text-sm text-slate-500 hover:text-indigo-600">← Atrás</button>
+                    <div className="mt-8 flex gap-3">
+                        <button onClick={() => setStep("service")} className="px-5 py-3 rounded-xl text-sm font-medium text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-colors">← Atrás</button>
                         {data.time && (
                             <button onClick={() => setStep("data")}
-                                className="px-6 py-2 rounded-full bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-colors">
+                                className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow-md shadow-indigo-500/20 active:scale-95 transition-all text-center">
                                 Continuar →
                             </button>
                         )}
@@ -208,11 +208,11 @@ export default function BookingWizard() {
                             </div>
                         ))}
                     </div>
-                    <div className="mt-6 flex gap-3">
-                        <button onClick={() => setStep("datetime")} className="text-sm text-slate-500 hover:text-indigo-600">← Atrás</button>
+                    <div className="mt-8 flex gap-3">
+                        <button onClick={() => setStep("datetime")} className="px-5 py-3 rounded-xl text-sm font-medium text-slate-500 hover:text-indigo-600 hover:bg-slate-50 transition-colors">← Atrás</button>
                         <button onClick={() => setStep("confirm")}
                             disabled={!data.name || !data.document_id || !data.phone || !data.age}
-                            className="px-6 py-2 rounded-full bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-40 transition-all">
+                            className="flex-1 sm:flex-none px-6 py-3 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow-md disabled:opacity-50 disabled:shadow-none active:scale-[0.98] transition-all text-center">
                             Revisar →
                         </button>
                     </div>
@@ -236,10 +236,10 @@ export default function BookingWizard() {
                         <div className="flex justify-between"><span className="text-slate-500">Teléfono</span><span className="font-medium text-slate-900">{data.phone}</span></div>
                     </div>
                     {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
-                    <div className="mt-6 flex gap-3">
-                        <button onClick={() => setStep("data")} className="text-sm text-slate-500 hover:text-indigo-600">← Atrás</button>
+                    <div className="mt-8 flex gap-3 flex-col sm:flex-row">
+                        <button onClick={() => setStep("data")} className="order-2 sm:order-1 px-5 py-3 rounded-xl text-sm font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 transition-colors">← Atrás</button>
                         <button onClick={handleSubmit}
-                            className="px-8 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-semibold hover:shadow-lg transition-all">
+                            className="order-1 sm:order-2 flex-1 px-8 py-3.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white font-bold shadow-lg shadow-indigo-500/30 hover:shadow-xl active:scale-[0.98] transition-all">
                             Confirmar Cita
                         </button>
                     </div>

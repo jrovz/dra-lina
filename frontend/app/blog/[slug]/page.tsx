@@ -67,7 +67,12 @@ export default async function PostPage({ params }: Props) {
                 )}
 
                 <div
-                    className="mt-8 prose prose-slate prose-lg max-w-none prose-headings:font-bold prose-a:text-indigo-600"
+                    className="mt-12 prose prose-slate prose-base md:prose-lg max-w-none break-words overflow-hidden
+                    prose-headings:font-extrabold prose-headings:tracking-tight prose-h2:text-indigo-900 prose-h3:text-indigo-800
+                    prose-a:text-indigo-600 prose-a:decoration-indigo-300 hover:prose-a:decoration-indigo-600 prose-a:underline-offset-4 prose-a:transition-colors
+                    prose-img:rounded-2xl prose-img:shadow-xl prose-img:border prose-img:border-slate-100
+                    prose-blockquote:border-l-indigo-500 prose-blockquote:bg-indigo-50 prose-blockquote:px-6 prose-blockquote:py-2 prose-blockquote:rounded-r-xl prose-blockquote:not-italic prose-blockquote:font-medium prose-blockquote:text-indigo-900
+                    prose-li:marker:text-indigo-500"
                     dangerouslySetInnerHTML={{ __html: post.content }}
                 />
 
